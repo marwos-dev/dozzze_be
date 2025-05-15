@@ -19,14 +19,20 @@ from django.urls import path
 from ninja import NinjaAPI
 
 from properties.api import router as properties_router
+from zones.api import router as zones_router
 
 api = NinjaAPI()
 
 api.add_router(
-    "/properties/", properties_router
+    "/properties/", properties_router,
 )
+api.add_router(
+    "/zones/", zones_router,
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', api.urls),
+
 ]

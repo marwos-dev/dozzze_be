@@ -1,29 +1,37 @@
-# backend/Dockerfile
+# Usa una imagen base de Python 3.11 en Alpine
+FROM python:3.11-alpine
 
-FROM python:3.11-slim
-
-# Instalamos dependencias del sistema necesarias para GDAL y PostgreSQL
-RUN apt-get update && apt-get install -y \
-    gdal-bin libgdal-dev libpq-dev build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Seteamos variables necesarias para compilar GDAL en Python
-ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
-ENV C_INCLUDE_PATH=/usr/include/gdal
-
-# Crear directorio del proyecto
+# Establece el directorio de trabajo
 WORKDIR /app
 
-# Copiar requirements
+# Instala las dependencias del sistema necesarias para GDAL, GEOS y PostgreSQL
+RUN apk add --no-cache \
+    python3=3.12.10-r0 \
+    py3-pip \
+    gdal-dev \
+    geos-dev \
+    proj-dev \
+    libpq-dev \
+    build-base \
+    bash \
+    && ln -sf python3 /usr/bin/python
+
+# Asegúrate de que las bibliotecas de GEOS estén enlazadas correctamente
+RUN ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos_c.dylib
+
+# Copia el archivo requirements.txt al contenedor
 COPY requirements.txt .
 
-# Instalar dependencias Python
+# Actualiza pip e instala las dependencias de Python
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copiar el resto del código
+# Configura la variable de entorno para GEOS
+ENV GEOS_LIBRARY_PATH=/usr/lib/libgeos_c.so.1
+
+# Copia todo el código (en dev, luego se sobreescribe por volumen)
 COPY . .
 
-# Exponer el puerto (si estás corriendo con runserver)
+# Expone el puerto 8000
 EXPOSE 8000
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["/app/entrypoint.sh"]

@@ -1,5 +1,7 @@
 from django.db import models
+
 from properties.models import Room  # asegurate que la app 'properties' exista
+
 
 class Reservation(models.Model):
     PENDING = "pending"
@@ -32,6 +34,7 @@ class Reservation(models.Model):
     pax_count = models.IntegerField(default=1, verbose_name="Cantidad de personas")
 
     class Meta:
+        db_table = "reservations"
         verbose_name = "Reserva"
         verbose_name_plural = "Reservas"
         unique_together = ("room", "check_in", "check_out")

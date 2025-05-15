@@ -7,6 +7,7 @@ from django.forms.models import BaseInlineFormSet
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django.utils.safestring import mark_safe
 
 from reservations.models import Reservation
 from .models import CommunicationMethod, Property, PropertyImage, Room, RoomImage, Service
@@ -61,7 +62,8 @@ class PropertyImageInline(admin.TabularInline):
 class ReservationInlineForm(forms.ModelForm):
     class Meta:
         model = Reservation
-        fields = '__all__'
+        fields = ['room', 'guest_name', 'guest_email', 'check_in', 'check_out', 'user']
+        readonly_fields = ['guest_name', 'guest_email', 'check_in', 'check_out', 'user']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,11 +74,17 @@ class ReservationInlineForm(forms.ModelForm):
 
 
 class ReservationInlineFormSet(BaseInlineFormSet):
+    readonly_fields = ['guest_name', 'guest_email', 'check_in', 'check_out', 'user']
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        for form in self.forms:
-            form.fields['room'].queryset = Room.objects.filter(property=self.instance)
+        if hasattr(self.instance, "property"):  # solo si self.instance es un Room
+            property_instance = self.instance.property
+            for form in self.forms:
+                form.fields['room'].queryset = Room.objects.filter(property=property_instance)
+        else:
+            for form in self.forms:
+                form.fields['room'].queryset = Room.objects.all()
 
 
 class ReservationInline(admin.TabularInline):
@@ -88,6 +96,9 @@ class ReservationInline(admin.TabularInline):
 
 @admin.register(Property)
 class PropertyAdmin(GISModelAdmin):
+    class Media:
+        js = ('js/addPoligon.js',)
+
     inlines = [PropertyImageInline, RoomInline, CommunicationMethodInline]
     list_display = ("name", "cover_preview", "location", "current_reservations")
     search_fields = ['name', 'location', 'rooms__pax']
@@ -95,7 +106,7 @@ class PropertyAdmin(GISModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'location', 'cover_image', 'reservations_table')
+            'fields': ('name', 'zone', 'location', 'cover_image', 'reservations_table')
         }),
     )
 
@@ -116,9 +127,13 @@ class PropertyAdmin(GISModelAdmin):
 
     def current_reservations(self, obj):
         return Reservation.objects.filter(room__property=obj, check_out__gte=timezone.now().date()).count()
+
     current_reservations.short_description = "Reservas activas"
 
     def reservations_table(self, obj):
+        if not isinstance(obj, Property):
+            return _("Error: se esperaba una propiedad.")
+
         reservations = Reservation.objects.filter(room__property=obj).select_related("room")
         if not reservations.exists():
             return _("No hay reservas asociadas.")
