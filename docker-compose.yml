@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   db:
     image: postgis/postgis:15-3.3
@@ -14,7 +12,7 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: ["/app/bin/entrypoint.sh"]
     volumes:
       - .:/app
     ports:
@@ -28,6 +26,11 @@ services:
       - DB_PASSWORD=password
       - DB_HOST=db
       - GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
+      - AWS_S3_REGION_NAME=asd
+      - AWS_ACCESS_KEY_ID=asd
+      - AWS_SECRET_ACCESS_KEY=asd
+      - AWS_STORAGE_BUCKET_NAME=asd
+      - MY_FRONTEND_SECRET_TOKEN=asd
 
 volumes:
   postgres_data:

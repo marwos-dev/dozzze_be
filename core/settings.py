@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 GDAL_LIBRARY_PATH = os.getenv("GDAL_LIBRARY_PATH", "/opt/homebrew/lib/libgdal.dylib")
@@ -89,7 +88,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -126,7 +124,6 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = ['static/']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -135,17 +132,52 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Configuración para usar Amazon S3
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-
-AWS_S3_REGION_NAME = "us-east-1"  # o la región que uses
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME") # o la región que uses
 AWS_QUERYSTRING_AUTH = False  # para que los links no tengan tokens de expiración
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None  # necesario en algunas configuraciones nuevas
 AWS_S3_SIGNATURE_VERSION = "s3v4"
 
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID", "default")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "default")
-AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "default")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 # MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.us-east-1.amazonaws.com/'
 
-MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN", "default")
+MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
+
+# Opcional:
+
+
+# JAZZMIN_SETTINGS = {
+#     "site_title": "Motor de Reservas",
+#     "site_header": "Motor de Reservas",
+#     "welcome_sign": "Bienvenido al Motor de Reservas",
+#     "show_ui_builder": True,  # Necesario para habilitar todas las características
+#     "related_modal_active": True,  # Para modales relacionados
+#     "map_widget": True,  # Habilitar widgets de mapa
+#     # 'custom_css': [
+#     #     '/css/jazzmin_map_fix.css',  # No brackets or quotes within the string
+#     # ],
+#     # 'custom_js': [
+#     #     '/js/jazzmin_map_fix.js',    # No brackets or quotes within the string
+#     # ],
+# }
+
+# JAZZMIN_UI_TWEAKS = {
+#     "navbar_small_text": False,
+#     "footer_small_text": False,
+#     "body_small_text": False,
+#     "brand_small_text": False,
+#     "brand_colour": "navbar-dark",
+#     "accent": "accent-primary",
+#     "navbar": "navbar-white navbar-light",
+#     "no_navbar_border": False,
+#     "sidebar": "sidebar-dark-primary",
+#     "sidebar_nav_small_text": False,
+#     "sidebar_disable_expand": False,
+#     "sidebar_nav_child_indent": False,
+#     "sidebar_nav_compact_style": False,
+#     "sidebar_nav_legacy_style": False,
+#     "sidebar_nav_flat_style": False,
+# }

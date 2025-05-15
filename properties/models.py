@@ -4,48 +4,64 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class Service(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Nombre")
+    description = models.TextField(verbose_name="Descripción")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+
     class Meta:
+        db_table = "services"
         verbose_name = "Servicio"
         verbose_name_plural = "Servicios"
         ordering = ["name"]
         unique_together = ("name",)
 
-    name = models.CharField(max_length=255, verbose_name="Nombre")
-    description = models.TextField(verbose_name="Descripción")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
-
     def __str__(self):
         return self.name
 
 
+def property_cover_image_upload_path(instance, filename):
+    return f"properties/{instance.property.id}/cover_image/{instance.id}"
+
+
 class Property(models.Model):
-    class Meta:
-        verbose_name = "Propiedad"
-        verbose_name_plural = "Propiedades"
-        ordering = ["-created_at"]
-        unique_together = ("name", "address")
-
-
     name = models.CharField(max_length=255, verbose_name="Nombre")
     description = models.TextField(verbose_name="Descripcion")
     address = models.CharField(max_length=255, verbose_name="Dirección")
     location = geomodels.PointField(geography=True, verbose_name="Ubicación")
     active = models.BooleanField(default=True, verbose_name="Activo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
-    cover_image = models.ImageField(upload_to='properties/covers/', null=True, blank=True, verbose_name="Imagen",
+    cover_image = models.ImageField(upload_to=property_cover_image_upload_path, null=True, blank=True,
+                                    verbose_name="Imagen",
                                     storage=S3Boto3Storage())
     zone = models.ForeignKey(
         'zones.Zone', related_name='properties', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Zona"
     )
 
+    class Meta:
+        db_table = "properties"
+        verbose_name = "Propiedad"
+        verbose_name_plural = "Propiedades"
+        ordering = ["-created_at"]
+        unique_together = ("name", "address")
+
     def __str__(self):
         return self.name
 
 
+def property_image_upload_path(instance, filename):
+    return f"properties/{instance.property.id}/gallery/{instance.id}"
+
+
 class PropertyImage(models.Model):
     property = models.ForeignKey(Property, related_name='gallery', on_delete=models.CASCADE, verbose_name="Zona")
-    image = models.ImageField(upload_to='properties/gallery/', verbose_name="Imagen", storage=S3Boto3Storage())
+    image = models.ImageField(upload_to=property_image_upload_path, verbose_name="Imagen", storage=S3Boto3Storage())
     caption = models.CharField(max_length=255, blank=True, verbose_name="Descripción")
+
+    class Meta:
+        db_table = "property_images"
+        verbose_name = "Imagen de Propiedad"
+        verbose_name_plural = "Imágenes de Propiedades"
+        ordering = ["-id"]
 
     def __str__(self):
         return f"Image of {self.property.name}"
@@ -69,15 +85,15 @@ class Room(models.Model):
     pax = models.PositiveIntegerField()
     services = models.ManyToManyField(Service, blank=True)
 
-
-    def __str__(self):
-        return f"{self.name} - {self.property.name}"
-
     class Meta:
+        db_table = "rooms"
         verbose_name = "Habitación"
         verbose_name_plural = "Habitaciones"
         ordering = ["name"]
         unique_together = ("name", "property")
+
+    def __str__(self):
+        return f"{self.name} - {self.property.name}"
 
     def is_available(self, check_in, check_out):
         return not self.reservations.filter(
@@ -87,18 +103,34 @@ class Room(models.Model):
 
 
 def room_image_upload_path(instance, filename):
-    return f"properties/{instance.room.property.id}/rooms/{instance.room.id}/{filename}"
+    return f"properties/{instance.room.property.id}/rooms/{instance.room.id}/{instance.id}"
 
 
 class RoomImage(models.Model):
     room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
     image = models.ImageField(upload_to=room_image_upload_path)
 
+    class Meta:
+        db_table = "room_images"
+        verbose_name = "Imagen de Habitación"
+        verbose_name_plural = "Imágenes de Habitaciones"
+        ordering = ["-id"]
+
+    def __str__(self):
+        return f"Image de {self.room.name}"
+
 
 class CommunicationMethod(models.Model):
     property = models.ForeignKey(Property, related_name="communication_methods", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     value = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "communication_methods"
+        verbose_name = "Método de Comunicación"
+        verbose_name_plural = "Métodos de Comunicación"
+        ordering = ["name"]
+        unique_together = ("property", "name")
 
     def __str__(self):
         return self.name
