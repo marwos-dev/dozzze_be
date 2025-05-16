@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: motor-reservas
+    env: docker
+    branch: production
+    dockerfilePath: ./Dockerfile  # o ./Dockerfile.prod si no lo renombrás
+    startCommand: /app/bin/production.sh
