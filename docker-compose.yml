@@ -10,6 +10,7 @@ services:
       - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
+
 #
 #  nginx:
 #    image: nginx:alpine
