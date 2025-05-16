@@ -1,17 +1,6 @@
 version: '3.9'
 
 services:
-  db:
-    image: postgis/postgis:15-3.3
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "5432:5432"
-
   web:
     build: .
     command: ["/app/bin/production.sh"]
@@ -21,8 +10,6 @@ services:
       - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
-    depends_on:
-      - db
 
   nginx:
     image: nginx:alpine
@@ -52,6 +39,5 @@ services:
       "
 
 volumes:
-  postgres_data:
   static_volume:
   media_volume:
