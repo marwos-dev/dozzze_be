@@ -12,6 +12,9 @@ python manage.py makemigrations
 echo "Corriendo migraciones..."
 python manage.py migrate
 
+echo "Corriendo collectstatic..."
+python manage.py collectstatic --noinput
+
 echo "Creando usuario inicial si no existe..."
 python manage.py shell << EOF
 from django.contrib.auth import get_user_model
@@ -24,4 +27,4 @@ else:
 EOF
 
 echo "Levantando servidor..."
-exec python manage.py runserver 0.0.0.0:8000
+gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3
