@@ -11,20 +11,19 @@ services:
       - static_volume:/app/static
       - media_volume:/app/media
 
-#
-#  nginx:
-#    image: nginx:alpine
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    volumes:
-#      - ./nginx/conf.d:/etc/nginx/conf.d
-#      - ./nginx/ssl:/etc/letsencrypt
-#      - ./nginx/ssl-data:/var/www/certbot
-#      - static_volume:/app/static
-#      - media_volume:/app/media
-#    depends_on:
-#      - web
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/ssl-data:/var/www/certbot
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      - web
 #
 #  certbot:
 #    image: certbot/certbot
