@@ -2,7 +2,9 @@
 
 # Espera a que la base de datos esté lista
 echo "Esperando a la base de datos..."
-while ! nc -z db 5432; do
+: "${DB_HOST:=db}"
+until nc -z $DB_HOST 5432; do
+  echo "Esperando a la base de datos en $DB_HOST:5432..."
   sleep 1
 done
 
