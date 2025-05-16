@@ -34,4 +34,4 @@ COPY . .
 # Expone el puerto 8000
 EXPOSE 8000
 
-CMD ["app/bin/production.sh"]
+CMD ["bin/production.sh"]
