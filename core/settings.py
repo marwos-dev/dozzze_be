@@ -62,8 +62,8 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
+    '181.169.99.158:3000'
 ]
-
 
 ROOT_URLCONF = 'core.urls'
 
@@ -143,7 +143,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Configuración para usar Amazon S3
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME") # o la región que uses
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")  # o la región que uses
 AWS_QUERYSTRING_AUTH = False  # para que los links no tengan tokens de expiración
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None  # necesario en algunas configuraciones nuevas
@@ -194,4 +194,8 @@ MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 # }
 
 
-STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+CSRF_TRUSTED_ORIGINS = [
+    "https://dozzzebe-production.up.railway.app",
+    "181.169.99.158:3000"
+]
