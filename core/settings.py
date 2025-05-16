@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -193,3 +194,6 @@ MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 #     "sidebar_nav_legacy_style": False,
 #     "sidebar_nav_flat_style": False,
 # }
+
+
+STATICFILES_STORAGE="whitenoise.storage.CompressedManifestStaticFilesStorage"
