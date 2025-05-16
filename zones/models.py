@@ -4,7 +4,7 @@ from storages.backends.s3boto3 import S3Boto3Storage
 
 
 def zone_cover_image_upload_path(instance, filename):
-    return f"zone/{instance.zone.id}/cover_image/{instance.id}"
+    return f"zone/{instance.id}/cover_image-{instance.id}"
 
 class Zone(models.Model):
     name = models.CharField(verbose_name="Nombre", max_length=255)

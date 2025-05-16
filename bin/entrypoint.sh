@@ -6,7 +6,10 @@ while ! nc -z db 5432; do
   sleep 1
 done
 
-echo "Base de datos disponible. Corriendo migraciones..."
+echo "Base de datos disponible."
+python manage.py makemigrations
+
+echo "Corriendo migraciones..."
 python manage.py migrate
 
 echo "Creando usuario inicial si no existe..."
