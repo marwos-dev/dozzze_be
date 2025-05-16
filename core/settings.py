@@ -63,6 +63,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     '181.169.99.158:3000'
+    "https://wwww.marwos.online",
+    "marwos.online",
 ]
 
 ROOT_URLCONF = 'core.urls'
