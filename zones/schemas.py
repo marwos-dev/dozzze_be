@@ -8,11 +8,11 @@ from properties.schemas import PropertyOut
 class ZoneOut(Schema):
     id: int
     name: str
-    description: str
-    area: str
-    cover_image: Optional[str]
-    images: Optional[List[str]]
-    properties: List[PropertyOut]
+    description: Optional[str] = None
+    area: Optional[str] = None
+    cover_image: Optional[str] = None
+    images: Optional[List[str]] = None
+    properties: List[PropertyOut] = []
 
     @staticmethod
     def resolve_area(obj):

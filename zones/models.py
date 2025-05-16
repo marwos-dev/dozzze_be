@@ -1,10 +1,11 @@
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
+from uuid import uuid4
 
 
 def zone_cover_image_upload_path(instance, filename):
-    return f"zone/{instance.id}/cover_image-{instance.id}"
+    return f"zones/cover_image/{filename}"
 
 class Zone(models.Model):
     name = models.CharField(verbose_name="Nombre", max_length=255)
@@ -23,7 +24,7 @@ class Zone(models.Model):
         return self.name
 
 def zone_image_upload_path(instance, filename):
-    return f"zone/{instance.zone.id}/gallery/{instance.id}"
+    return f"zone/gallery/{filename}"
 
 class ZoneImage(models.Model):
     zone = models.ForeignKey(Zone, related_name='gallery', on_delete=models.CASCADE, verbose_name="Zona")

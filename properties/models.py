@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
+from uuid import uuid4
 
 
 class Service(models.Model):
@@ -20,7 +21,7 @@ class Service(models.Model):
 
 
 def property_cover_image_upload_path(instance, filename):
-    return f"properties/{instance.property.id}/cover_image/{instance.id}"
+    return f"properties/cover_image/{filename}"
 
 
 class Property(models.Model):
@@ -49,7 +50,7 @@ class Property(models.Model):
 
 
 def property_image_upload_path(instance, filename):
-    return f"properties/{instance.property.id}/gallery/{instance.id}"
+    return f"properties/gallery/{filename}"
 
 
 class PropertyImage(models.Model):
@@ -103,7 +104,7 @@ class Room(models.Model):
 
 
 def room_image_upload_path(instance, filename):
-    return f"properties/{instance.room.property.id}/rooms/{instance.room.id}/{instance.id}"
+    return f"properties/rooms/{filename}"
 
 
 class RoomImage(models.Model):
