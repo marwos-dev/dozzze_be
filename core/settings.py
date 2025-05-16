@@ -64,6 +64,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://192.168.0.46'
     '181.169.99.158:3000'
+    "https://wwww.marwos.online",
+    "marwos.online",
 ]
 
 ROOT_URLCONF = 'core.urls'
