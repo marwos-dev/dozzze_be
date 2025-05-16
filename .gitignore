@@ -101,3 +101,9 @@ node_modules/
 .DS_Store
 .vscode/
 .env
+
+
+nginx/ssl
+nginx/ssl-data
+
+staticfiles
