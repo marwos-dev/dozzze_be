@@ -65,7 +65,6 @@ CORS_ALLOWED_ORIGINS = [
     'http://192.168.0.46'
     '181.169.99.158:3000'
     "https://www.marwos.online",
-    "marwos.online",
     "https://dozzze-cmy18blmi-marwos-projects.vercel.app",
 ]
 CORS_ALLOW_CREDENTIALS = True
