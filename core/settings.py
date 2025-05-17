@@ -68,6 +68,7 @@ CORS_ALLOWED_ORIGINS = [
     "marwos.online",
     "https://dozzze-cmy18blmi-marwos-projects.vercel.app",
 ]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'core.urls'
 
