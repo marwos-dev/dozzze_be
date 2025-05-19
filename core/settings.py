@@ -63,7 +63,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://192.168.0.46',
-    '181.169.99.158:3000',
+    'http://181.169.99.158:3000',
     "https://www.marwos.online",
     "https://dozzze-cmy18blmi-marwos-projects.vercel.app",
 ]
