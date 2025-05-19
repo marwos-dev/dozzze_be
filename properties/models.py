@@ -50,7 +50,7 @@ class Property(models.Model):
 
 
 def property_image_upload_path(instance, filename):
-    return f"properties/gallery/{filename}"
+    return f"properties/gallery/{uuid4()}-{filename}"
 
 
 class PropertyImage(models.Model):
@@ -104,12 +104,12 @@ class Room(models.Model):
 
 
 def room_image_upload_path(instance, filename):
-    return f"properties/rooms/{filename}"
+    return f"properties/gallery/{uuid4()}-{filename}"
 
 
 class RoomImage(models.Model):
     room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=room_image_upload_path)
+    image = models.ImageField(upload_to=room_image_upload_path, storage=S3Boto3Storage())
 
     class Meta:
         db_table = "room_images"

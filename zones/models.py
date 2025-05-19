@@ -13,7 +13,13 @@ class Zone(models.Model):
     area = geomodels.PolygonField(geography=True, null=True, blank=True)
     active = models.BooleanField(default=True, verbose_name="Activo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
-    cover_image = models.ImageField(upload_to=zone_cover_image_upload_path, null=True, blank=True, verbose_name="Imagen", storage=S3Boto3Storage())
+    cover_image = models.ImageField(
+        upload_to=zone_cover_image_upload_path,
+        null=True,
+        blank=True,
+        verbose_name="Imagen",
+        storage=S3Boto3Storage()
+    )
 
     class Meta:
         db_table = "zones"
