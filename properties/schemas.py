@@ -69,7 +69,7 @@ class PropertyOut(Schema):
 
     @staticmethod
     def resolve_cover_image(obj):
-        return generate_presigned_url(obj.cover_image.url) if obj.cover_image else None
+        return generate_presigned_url(obj.cover_image.name) if obj.cover_image else None
 
     @staticmethod
     def resolve_rooms(obj):
