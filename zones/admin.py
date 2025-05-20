@@ -12,17 +12,16 @@ class ZoneImageInline(admin.TabularInline):
 
 @admin.register(Zone)
 class ZoneAdmin(GISModelAdmin):
-    inlines = [ZoneImageInline]
+    inlines = [
+        ZoneImageInline,
+    ]
     list_display = ("name",)
+    default_lon = -3.7038
+    default_lat = 40.4168
+    default_zoom = 6
 
-    # Centrar el mapa en España
-    gis_widget_kwargs = {
-        "attrs": {
-            "default_lon": -3.7038,
-            "default_lat": 40.4168,
-            "default_zoom": 6,
-        }
-    }
+    class Media:
+        css = {"all": ("css/map_solution.css",)}
 
     def cover_preview(self, obj):
         if obj.cover_image:

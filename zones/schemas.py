@@ -12,7 +12,7 @@ class ZoneOut(Schema):
     description: Optional[str] = None
     area: Optional[str] = None
     cover_image: Optional[str] = None
-    images: Optional[List[str]] = None
+    images: Optional[List[str]] = []
     properties: List[PropertyOut] = []
 
     @staticmethod
@@ -22,8 +22,11 @@ class ZoneOut(Schema):
     @staticmethod
     def resolve_images(obj):
         return (
-            [generate_presigned_url(image.image.name) for image in obj.gallery.all()]
-            if obj.gallery
+            [
+                generate_presigned_url(image.image.name)
+                for image in obj.zone_images.all()
+            ]
+            if obj.zone_images
             else []
         )
 

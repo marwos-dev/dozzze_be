@@ -107,6 +107,7 @@ class ReservationInline(admin.TabularInline):
 class PropertyAdmin(GISModelAdmin):
     class Media:
         js = ("js/addPoligon.js",)
+        css = {"all": ("css/map_solution.css",)}
 
     inlines = [PropertyImageInline, RoomInline, CommunicationMethodInline]
     list_display = (
