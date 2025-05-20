@@ -12,10 +12,12 @@ router = Router(tags=["zones"])
 @router.get("/{zone_id}/polygon")
 def zone_polygon(request, zone_id):
     zone = Zone.objects.get(id=zone_id)
-    return Response({
-        'coordinates': zone.area.geojson,
-        'name': zone.name,
-    })
+    return Response(
+        {
+            "coordinates": zone.area.geojson,
+            "name": zone.name,
+        }
+    )
 
 
 @router.get("/", response={200: List[ZoneOut]})

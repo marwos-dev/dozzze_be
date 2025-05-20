@@ -8,8 +8,7 @@ class ReservationAdmin(admin.ModelAdmin):
     list_display = ("room", "guest_name", "check_in", "check_out", "created_at")
     list_filter = ("room", "check_in", "check_out")
     search_fields = ("guest_name", "guest_email")
-    exclude = ("user", )
-
+    exclude = ("user",)
 
     def save_model(self, request, obj, form, change):
         if not change:

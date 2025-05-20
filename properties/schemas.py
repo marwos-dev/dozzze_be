@@ -25,7 +25,11 @@ class RoomOut(Schema):
 
     @staticmethod
     def resolve_images(obj):
-        return [room_image.image.url for room_image in obj.images.all()] if obj.images else []
+        return (
+            [room_image.image.url for room_image in obj.images.all()]
+            if obj.images
+            else []
+        )
 
 
 class PropertyOut(Schema):
@@ -49,7 +53,11 @@ class PropertyOut(Schema):
 
     @staticmethod
     def resolve_images(obj):
-        return [zone_image.image.url for zone_image in obj.gallery.all()] if obj.gallery else []
+        return (
+            [zone_image.image.url for zone_image in obj.gallery.all()]
+            if obj.gallery
+            else []
+        )
 
     @staticmethod
     def resolve_cover_image(obj):
@@ -61,7 +69,11 @@ class PropertyOut(Schema):
 
     @staticmethod
     def resolve_communication_methods(obj):
-        return [method.name for method in obj.communication_methods.all()] if obj.communication_methods else []
+        return (
+            [method.name for method in obj.communication_methods.all()]
+            if obj.communication_methods
+            else []
+        )
 
     @staticmethod
     def resolve_location(obj):

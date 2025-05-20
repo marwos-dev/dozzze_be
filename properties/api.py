@@ -1,13 +1,13 @@
-from ninja import Router, Query
-from typing import Optional, List
-from datetime import date
+from typing import List, Optional
 
+from django.conf import settings
+from ninja import Query, Router
 from ninja.errors import HttpError
+from ninja.security import APIKeyHeader
 
 from .models import Property
 from .schemas import PropertyOut
-from django.conf import settings
-from ninja.security import APIKeyHeader
+
 
 class FrontendTokenAuth(APIKeyHeader):
     param_name = "X-API-KEY"  # o "Authorization"
@@ -21,7 +21,7 @@ class FrontendTokenAuth(APIKeyHeader):
 router = Router(tags=["properties"])
 
 
-@router.get("/", response={200:List[PropertyOut], 400:str})
+@router.get("/", response={200: List[PropertyOut], 400: str})
 def available_properties(
     request,
     zona: Optional[int] = Query(None),
