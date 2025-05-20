@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-(y4si_+axe6qoukrek*a=nfzc97!6d&m6p^&re&)v*m4c)b@3n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app"]
 
 # Application definition
 
@@ -48,19 +48,26 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://192.168.0.46"]
-
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://192.168.0.46',
+    'http://181.169.99.158:3000',
+    "https://www.marwos.online",
+    "https://dozzze-cmy18blmi-marwos-projects.vercel.app",
+]
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "core.urls"
 
@@ -125,10 +132,17 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")  # ✔️ Aquí Django juntará los archivos
+
+# Eliminalo en producción 👇
+# STATICFILES_DIRS = [...]
+
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = ["static/"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -187,3 +201,10 @@ MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 #     "sidebar_nav_legacy_style": False,
 #     "sidebar_nav_flat_style": False,
 # }
+
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+CSRF_TRUSTED_ORIGINS = [
+    "https://dozzzebe-production.up.railway.app",
+    "181.169.99.158:3000"
+]

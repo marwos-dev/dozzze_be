@@ -3,6 +3,7 @@ from typing import List, Optional
 from ninja import Schema
 
 from properties.schemas import PropertyOut
+from utils.s3_utils import generate_presigned_url
 
 
 class ZoneOut(Schema):
@@ -20,11 +21,11 @@ class ZoneOut(Schema):
 
     @staticmethod
     def resolve_images(obj):
-        return [image.image.url for image in obj.gallery.all()] if obj.gallery else []
+        return [generate_presigned_url(image.image.name) for image in obj.gallery.all()] if obj.gallery else []
 
     @staticmethod
     def resolve_cover_image(obj):
-        return obj.cover_image.image.url if obj.cover_image else None
+        return generate_presigned_url(obj.cover_image.image.name) if obj.cover_image else None
 
     @staticmethod
     def resolve_properties(obj):

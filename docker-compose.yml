@@ -1,30 +1,43 @@
 version: '3.9'
 
-
 services:
-  db:
-    image: postgis/postgis:15-3.3
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-
   web:
     build: .
-    command: ["/app/bin/dev.sh"]
+    command: ["/app/bin/production.sh"]
     env_file:
-      - .env.dev
+      - .env
     volumes:
       - .:/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
+      - static_volume:/app/static
+      - media_volume:/app/media
 
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/ssl-data:/var/www/certbot
+      - static_volume:/app/static
+      - media_volume:/app/media
+    depends_on:
+      - web
+#
+#  certbot:
+#    image: certbot/certbot
+#    volumes:
+#      - ./nginx/ssl:/etc/letsencrypt
+#      - ./nginx/ssl-data:/var/www/certbot
+#    entrypoint: >
+#      /bin/sh -c "
+#        sleep 10 &&
+#        certbot certonly --webroot --webroot-path=/var/www/certbot \
+#        --email marwos97@gmail.com --agree-tos --no-eff-email \
+#        -d localhost --non-interactive \
+#      "
 
 volumes:
-  postgres_data:
+  static_volume:
+  media_volume:

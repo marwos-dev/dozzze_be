@@ -2,18 +2,18 @@
 
 # Espera a que la base de datos esté lista
 echo "Esperando a la base de datos..."
-while ! nc -z db 5432; do
+: "${DB_HOST:=db}"
+until nc -z $DB_HOST 5432; do
+  echo "Esperando a la base de datos en $DB_HOST:5432..."
   sleep 1
 done
-
 echo "Base de datos disponible."
-python manage.py makemigrations
-
-echo "Corriendo migraciones..."
-python manage.py migrate
 
 echo "Corriendo collectstatic..."
 python manage.py collectstatic --noinput
+
+echo "Corriendo migraciones..."
+python manage.py migrate
 
 echo "Creando usuario inicial si no existe..."
 python manage.py shell << EOF
