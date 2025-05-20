@@ -1,8 +1,9 @@
 from datetime import date
 from typing import List, Optional
-from utils.s3_utils import generate_presigned_url
 
 from ninja import Schema
+
+from utils.s3_utils import generate_presigned_url
 
 
 class PropertySearchInput(Schema):
@@ -27,7 +28,10 @@ class RoomOut(Schema):
     @staticmethod
     def resolve_images(obj):
         return (
-            [generate_presigned_url(room_image.image.name) for room_image in obj.images.all()]
+            [
+                generate_presigned_url(room_image.image.name)
+                for room_image in obj.images.all()
+            ]
             if obj.images
             else []
         )
@@ -55,15 +59,17 @@ class PropertyOut(Schema):
     @staticmethod
     def resolve_images(obj):
         return (
-            [generate_presigned_url(zone_image.image.name) for zone_image in obj.gallery.all()]
+            [
+                generate_presigned_url(zone_image.image.name)
+                for zone_image in obj.gallery.all()
+            ]
             if obj.gallery
             else []
         )
 
-
     @staticmethod
     def resolve_cover_image(obj):
-        return obj.cover_image.url if obj.cover_image else None
+        return generate_presigned_url(obj.cover_image.url) if obj.cover_image else None
 
     @staticmethod
     def resolve_rooms(obj):

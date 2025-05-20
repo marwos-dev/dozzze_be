@@ -21,11 +21,19 @@ class ZoneOut(Schema):
 
     @staticmethod
     def resolve_images(obj):
-        return [generate_presigned_url(image.image.name) for image in obj.gallery.all()] if obj.gallery else []
+        return (
+            [generate_presigned_url(image.image.name) for image in obj.gallery.all()]
+            if obj.gallery
+            else []
+        )
 
     @staticmethod
     def resolve_cover_image(obj):
-        return generate_presigned_url(obj.cover_image.image.name) if obj.cover_image else None
+        return (
+            generate_presigned_url(obj.cover_image.image.name)
+            if obj.cover_image
+            else None
+        )
 
     @staticmethod
     def resolve_properties(obj):

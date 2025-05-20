@@ -35,4 +35,4 @@ COPY . .
 EXPOSE 8000
 
 
-CMD ["bin/production.sh"]
+CMD ["bin/dev.sh"]
