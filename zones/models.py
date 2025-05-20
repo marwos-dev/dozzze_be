@@ -38,7 +38,7 @@ def zone_image_upload_path(instance, filename):
 
 class ZoneImage(models.Model):
     zone = models.ForeignKey(
-        Zone, related_name="gallery", on_delete=models.CASCADE, verbose_name="Zona"
+        Zone, related_name="zone_images", on_delete=models.CASCADE, verbose_name="Zona"
     )
     image = models.ImageField(
         upload_to=zone_image_upload_path,
