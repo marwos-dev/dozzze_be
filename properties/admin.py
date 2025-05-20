@@ -4,13 +4,19 @@ from django import forms
 from django.contrib import admin
 from django.contrib.gis.admin import GISModelAdmin
 from django.forms.models import BaseInlineFormSet
-from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from django.utils.safestring import mark_safe
 
 from reservations.models import Reservation
-from .models import CommunicationMethod, Property, PropertyImage, Room, RoomImage, Service
+
+from .models import (
+    CommunicationMethod,
+    Property,
+    PropertyImage,
+    Room,
+    RoomImage,
+    Service,
+)
 
 
 class RoomImageInline(admin.TabularInline):
@@ -30,26 +36,24 @@ class CommunicationMethodInline(admin.TabularInline):
 
 
 class AvailabilityFilter(admin.SimpleListFilter):
-    title = _('Disponibilidad')
-    parameter_name = 'availability'
+    title = _("Disponibilidad")
+    parameter_name = "availability"
 
     def lookups(self, request, model_admin):
         return [
-            ('available', _('Disponible hoy')),
-            ('unavailable', _('Ocupada hoy')),
+            ("available", _("Disponible hoy")),
+            ("unavailable", _("Ocupada hoy")),
         ]
 
     def queryset(self, request, queryset):
         today = date.today()
-        if self.value() == 'available':
+        if self.value() == "available":
             return queryset.exclude(
-                reservations__check_in__lte=today,
-                reservations__check_out__gt=today
+                reservations__check_in__lte=today, reservations__check_out__gt=today
             )
-        if self.value() == 'unavailable':
+        if self.value() == "unavailable":
             return queryset.filter(
-                reservations__check_in__lte=today,
-                reservations__check_out__gt=today
+                reservations__check_in__lte=today, reservations__check_out__gt=today
             )
         return queryset
 
@@ -62,29 +66,34 @@ class PropertyImageInline(admin.TabularInline):
 class ReservationInlineForm(forms.ModelForm):
     class Meta:
         model = Reservation
-        fields = ['room', 'guest_name', 'guest_email', 'check_in', 'check_out', 'user']
-        readonly_fields = ['guest_name', 'guest_email', 'check_in', 'check_out', 'user']
+        fields = ["room", "guest_name", "guest_email", "check_in", "check_out", "user"]
+        readonly_fields = ["guest_name", "guest_email", "check_in", "check_out", "user"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if self.instance.pk and self.instance.room:
             property_instance = self.instance.room.property
-            self.fields['room'].queryset = Room.objects.filter(property=property_instance)
+            self.fields["room"].queryset = Room.objects.filter(
+                property=property_instance
+            )
 
 
 class ReservationInlineFormSet(BaseInlineFormSet):
-    readonly_fields = ['guest_name', 'guest_email', 'check_in', 'check_out', 'user']
+    readonly_fields = ["guest_name", "guest_email", "check_in", "check_out", "user"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         if hasattr(self.instance, "property"):  # solo si self.instance es un Room
             property_instance = self.instance.property
             for form in self.forms:
-                form.fields['room'].queryset = Room.objects.filter(property=property_instance)
+                form.fields["room"].queryset = Room.objects.filter(
+                    property=property_instance
+                )
         else:
             for form in self.forms:
-                form.fields['room'].queryset = Room.objects.all()
+                form.fields["room"].queryset = Room.objects.all()
 
 
 class ReservationInline(admin.TabularInline):
@@ -97,24 +106,38 @@ class ReservationInline(admin.TabularInline):
 @admin.register(Property)
 class PropertyAdmin(GISModelAdmin):
     class Media:
-        js = ('js/addPoligon.js',)
+        js = ("js/addPoligon.js",)
 
     inlines = [PropertyImageInline, RoomInline, CommunicationMethodInline]
-    list_display = ("name", "cover_preview", "location", "current_reservations")
-    search_fields = ['name', 'location', 'rooms__pax']
-    readonly_fields = ["reservations_table"]
+    list_display = (
+        "name",
+        "cover_preview",
+        "location",
+    )  # add "current_reservations"
+    search_fields = ["name", "location", "rooms__pax"]
+    # readonly_fields = ["reservations_table"]
 
     fieldsets = (
-        (None, {
-            'fields': ('name', 'zone', 'location', 'cover_image', 'reservations_table')
-        }),
+        (
+            None,
+            {
+                "fields": (
+                    "name",
+                    "zone",
+                    "location",
+                    "cover_image",
+                    "description",
+                    "active",
+                )  # add 'reservations_table'
+            },
+        ),
     )
 
     gis_widget_kwargs = {
-        'attrs': {
-            'default_lon': -3.7038,
-            'default_lat': 40.4168,
-            'default_zoom': 6,
+        "attrs": {
+            "default_lon": -3.7038,
+            "default_lat": 40.4168,
+            "default_zoom": 6,
         }
     }
 
@@ -125,47 +148,47 @@ class PropertyAdmin(GISModelAdmin):
 
     cover_preview.short_description = "Cover"
 
-    def current_reservations(self, obj):
-        return Reservation.objects.filter(room__property=obj, check_out__gte=timezone.now().date()).count()
+    # def current_reservations(self, obj):
+    #     return Reservation.objects.filter(room__property=obj, check_out__gte=timezone.now().date()).count()
+    #
+    # current_reservations.short_description = "Reservas activas"
 
-    current_reservations.short_description = "Reservas activas"
-
-    def reservations_table(self, obj):
-        if not isinstance(obj, Property):
-            return _("Error: se esperaba una propiedad.")
-
-        reservations = Reservation.objects.filter(room__property=obj).select_related("room")
-        if not reservations.exists():
-            return _("No hay reservas asociadas.")
-
-        rows = "".join(
-            f"<tr><td>{r.id}</td><td>{r.room.name}</td><td>{r.check_in}</td><td>{r.check_out}</td></tr>"
-            for r in reservations
-        )
-        table = f"""
-        <table style="border-collapse: collapse; width: 100%;">
-            <thead>
-                <tr>
-                    <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
-                    <th style="border: 1px solid #ddd; padding: 8px;">Habitación</th>
-                    <th style="border: 1px solid #ddd; padding: 8px;">Check-in</th>
-                    <th style="border: 1px solid #ddd; padding: 8px;">Check-out</th>
-                </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-        </table>
-        """
-        return mark_safe(table)
-
-    reservations_table.short_description = "Reservas relacionadas"
+    # def reservations_table(self, obj):
+    #     if not isinstance(obj, Property):
+    #         return _("Error: se esperaba una propiedad.")
+    #
+    #     reservations = Reservation.objects.filter(room__property=obj).select_related("room")
+    #     if not reservations.exists():
+    #         return _("No hay reservas asociadas.")
+    #
+    #     rows = "".join(
+    #         f"<tr><td>{r.id}</td><td>{r.room.name}</td><td>{r.check_in}</td><td>{r.check_out}</td></tr>"
+    #         for r in reservations
+    #     )
+    #     table = f"""
+    #     <table style="border-collapse: collapse; width: 100%;">
+    #         <thead>
+    #             <tr>
+    #                 <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+    #                 <th style="border: 1px solid #ddd; padding: 8px;">Habitación</th>
+    #                 <th style="border: 1px solid #ddd; padding: 8px;">Check-in</th>
+    #                 <th style="border: 1px solid #ddd; padding: 8px;">Check-out</th>
+    #             </tr>
+    #         </thead>
+    #         <tbody>{rows}</tbody>
+    #     </table>
+    #     """
+    #     return mark_safe(table)
+    #
+    # reservations_table.short_description = "Reservas relacionadas"
 
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    inlines = [RoomImageInline, ReservationInline]
+    inlines = [RoomImageInline]  # ReservationInline
     list_display = ("name", "property", "pax")
     filter_horizontal = ("services",)
-    list_filter = (AvailabilityFilter,)
+    # list_filter = (AvailabilityFilter,)
 
 
 @admin.register(Service)

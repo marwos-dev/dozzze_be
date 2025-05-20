@@ -1,11 +1,13 @@
+from uuid import uuid4
+
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
-from uuid import uuid4
 
 
 def zone_cover_image_upload_path(instance, filename):
-    return f"zones/cover_image/{filename}"
+    return f"zones/cover_image/{uuid4()}-{filename}"
+
 
 class Zone(models.Model):
     name = models.CharField(verbose_name="Nombre", max_length=255)
@@ -18,7 +20,7 @@ class Zone(models.Model):
         null=True,
         blank=True,
         verbose_name="Imagen",
-        storage=S3Boto3Storage()
+        storage=S3Boto3Storage(),
     )
 
     class Meta:
@@ -29,12 +31,20 @@ class Zone(models.Model):
     def __str__(self):
         return self.name
 
+
 def zone_image_upload_path(instance, filename):
-    return f"zone/gallery/{filename}"
+    return f"zone/gallery/{uuid4()}-{filename}"
+
 
 class ZoneImage(models.Model):
-    zone = models.ForeignKey(Zone, related_name='gallery', on_delete=models.CASCADE, verbose_name="Zona")
-    image = models.ImageField(upload_to=zone_image_upload_path, verbose_name="Imagen", storage=S3Boto3Storage())
+    zone = models.ForeignKey(
+        Zone, related_name="gallery", on_delete=models.CASCADE, verbose_name="Zona"
+    )
+    image = models.ImageField(
+        upload_to=zone_image_upload_path,
+        verbose_name="Imagen",
+        storage=S3Boto3Storage(),
+    )
     caption = models.CharField(max_length=255, blank=True, verbose_name="Descripción")
 
     class Meta:
@@ -44,8 +54,3 @@ class ZoneImage(models.Model):
 
     def __str__(self):
         return f"Imagen de Zona {self.zone.name}"
-
-    class Meta:
-        verbose_name = "Imagen de Zona"
-        verbose_name_plural = "Imágenes de Zonas"
-        ordering = ["-id"]

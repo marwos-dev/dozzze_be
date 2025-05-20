@@ -1,7 +1,8 @@
+from uuid import uuid4
+
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
-from uuid import uuid4
 
 
 class Service(models.Model):
@@ -31,11 +32,20 @@ class Property(models.Model):
     location = geomodels.PointField(geography=True, verbose_name="Ubicación")
     active = models.BooleanField(default=True, verbose_name="Activo")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
-    cover_image = models.ImageField(upload_to=property_cover_image_upload_path, null=True, blank=True,
-                                    verbose_name="Imagen",
-                                    storage=S3Boto3Storage())
+    cover_image = models.ImageField(
+        upload_to=property_cover_image_upload_path,
+        null=True,
+        blank=True,
+        verbose_name="Imagen",
+        storage=S3Boto3Storage(),
+    )
     zone = models.ForeignKey(
-        'zones.Zone', related_name='properties', on_delete=models.CASCADE, null=True, blank=True, verbose_name="Zona"
+        "zones.Zone",
+        related_name="properties",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name="Zona",
     )
 
     class Meta:
@@ -54,8 +64,14 @@ def property_image_upload_path(instance, filename):
 
 
 class PropertyImage(models.Model):
-    property = models.ForeignKey(Property, related_name='gallery', on_delete=models.CASCADE, verbose_name="Zona")
-    image = models.ImageField(upload_to=property_image_upload_path, verbose_name="Imagen", storage=S3Boto3Storage())
+    property = models.ForeignKey(
+        Property, related_name="gallery", on_delete=models.CASCADE, verbose_name="Zona"
+    )
+    image = models.ImageField(
+        upload_to=property_image_upload_path,
+        verbose_name="Imagen",
+        storage=S3Boto3Storage(),
+    )
     caption = models.CharField(max_length=255, blank=True, verbose_name="Descripción")
 
     class Meta:
@@ -79,7 +95,9 @@ class Room(models.Model):
         (DUPLEX, "Duplex"),
     ]
 
-    property = models.ForeignKey(Property, related_name="rooms", on_delete=models.CASCADE)
+    property = models.ForeignKey(
+        Property, related_name="rooms", on_delete=models.CASCADE
+    )
     type = models.CharField(max_length=20, choices=ROOM_TYPES, verbose_name="Tipo")
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -98,8 +116,7 @@ class Room(models.Model):
 
     def is_available(self, check_in, check_out):
         return not self.reservations.filter(
-            check_in__lt=check_out,
-            check_out__gt=check_in
+            check_in__lt=check_out, check_out__gt=check_in
         ).exists()
 
 
@@ -109,7 +126,9 @@ def room_image_upload_path(instance, filename):
 
 class RoomImage(models.Model):
     room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=room_image_upload_path, storage=S3Boto3Storage())
+    image = models.ImageField(
+        upload_to=room_image_upload_path, storage=S3Boto3Storage()
+    )
 
     class Meta:
         db_table = "room_images"
@@ -122,7 +141,9 @@ class RoomImage(models.Model):
 
 
 class CommunicationMethod(models.Model):
-    property = models.ForeignKey(Property, related_name="communication_methods", on_delete=models.CASCADE)
+    property = models.ForeignKey(
+        Property, related_name="communication_methods", on_delete=models.CASCADE
+    )
     name = models.CharField(max_length=100)
     value = models.CharField(max_length=100)
 
