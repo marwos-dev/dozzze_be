@@ -22,7 +22,7 @@ class Service(models.Model):
 
 
 def property_cover_image_upload_path(instance, filename):
-    return f"properties/cover_image/{filename}"
+    return f"properties/cover_image/{uuid4()}-{filename}"
 
 
 class Property(models.Model):
