@@ -1,0 +1,38 @@
+/* Logo en header: tamaño máximo y responsive */
+.brand-link img {
+  max-height: 50px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Logo en login */
+.login-logo img {
+  max-height: 80%;
+  width: 100%;
+  /*margin-bottom: 100px;*/
+}
+
+/* Ajuste del contenedor del login para que no se vaya muy abajo */
+.login-box {
+  /*margin-top: 1vh; !* usa vh para que se adapte según altura ventana *!*/
+  padding: 1rem;
+  box-sizing: border-box;
+  max-width: 400px;
+  width: 90%; /* para que sea responsivo y no muy ancho */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 576px) {
+  .brand-link img {
+    max-height: 40px;
+  }
+  .login-logo img {
+    max-height: 40px;
+  }
+  .login-box {
+    margin-top: 3vh;
+    width: 95%;
+  }
+}

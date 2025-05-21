@@ -132,9 +132,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")  # ✔️ Aquí Django juntará los archivos
-
 # Eliminalo en producción 👇
 # STATICFILES_DIRS = [...]
 
@@ -170,6 +167,8 @@ MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 
 
 JAZZMIN_SETTINGS = {
+    "site_logo": "images/logo.png",         # logo para el admin
+    "site_icon": "images/favicon.png",
     "site_title": "Admin Panel",
     "site_header": "Panel Administrativo DOZZZE",
     "site_brand": "DOZZZE",
@@ -183,6 +182,7 @@ JAZZMIN_SETTINGS = {
         "properties.Service",
         "properties.CommunicationMethod",
     ],
+    "custom_css": "css/admin_custom.css",
 
     # "theme": "flatly",
     "changeform_format": "horizontal_tabs",
