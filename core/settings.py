@@ -32,7 +32,7 @@ ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app"]
 # Application definition
 
 INSTALLED_APPS = [
-    'jazzmin',
+    "jazzmin",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -169,39 +169,36 @@ MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 # Opcional:
 
 
-# JAZZMIN_SETTINGS = {
-#     "site_title": "Motor de Reservas",
-#     "site_header": "Motor de Reservas",
-#     "welcome_sign": "Bienvenido al Motor de Reservas",
-#     "show_ui_builder": True,  # Necesario para habilitar todas las características
-#     "related_modal_active": True,  # Para modales relacionados
-#     "map_widget": True,  # Habilitar widgets de mapa
-#     # 'custom_css': [
-#     #     '/css/jazzmin_map_fix.css',  # No brackets or quotes within the string
-#     # ],
-#     # 'custom_js': [
-#     #     '/js/jazzmin_map_fix.js',    # No brackets or quotes within the string
-#     # ],
-# }
+JAZZMIN_SETTINGS = {
+    "site_title": "Admin Panel",
+    "site_header": "Panel Administrativo DOZZZE",
+    "site_brand": "DOZZZE",
+    "welcome_sign": "Bienvenido al panel de administración", "copyright": "DOZZZE",
+      "order_with_respect_to": [
+        "auth.User", # User Menu
+        "auth.Group",
+        "zones.Zone", # Zone Menu
+        "properties.Property", #Property Menu
+        "properties.Room",
+        "properties.Service",
+        "properties.CommunicationMethod",
+    ],
 
-# JAZZMIN_UI_TWEAKS = {
-#     "navbar_small_text": False,
-#     "footer_small_text": False,
-#     "body_small_text": False,
-#     "brand_small_text": False,
-#     "brand_colour": "navbar-dark",
-#     "accent": "accent-primary",
-#     "navbar": "navbar-white navbar-light",
-#     "no_navbar_border": False,
-#     "sidebar": "sidebar-dark-primary",
-#     "sidebar_nav_small_text": False,
-#     "sidebar_disable_expand": False,
-#     "sidebar_nav_child_indent": False,
-#     "sidebar_nav_compact_style": False,
-#     "sidebar_nav_legacy_style": False,
-#     "sidebar_nav_flat_style": False,
-# }
-
+    # "theme": "flatly",
+    "changeform_format": "horizontal_tabs",
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.User": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "zones.Zone": "fas fa-map-marked-alt",
+        "properties.Property": "fas fa-building",
+        # "reservations.Reservartion": "fas fa-calendar-check",
+        # "properties": "fas fa-bed",
+        "properties.Room": "fas fa-door-open",
+        "properties.CommunicationMethod": "fas fa-comment-dots",
+        "properties.Service": "fas fa-concierge-bell",
+    }
+}
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CSRF_TRUSTED_ORIGINS = [
