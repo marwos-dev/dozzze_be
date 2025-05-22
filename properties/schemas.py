@@ -20,6 +20,7 @@ class RoomOut(Schema):
     pax: int
     services: List[str]
     images: Optional[List[str]]
+    property_id: int
 
     @staticmethod
     def resolve_services(obj):
@@ -41,6 +42,7 @@ class PropertyOut(Schema):
     id: int
     name: str
     zone: str
+    zone_id: int
     description: str
 
     address: str

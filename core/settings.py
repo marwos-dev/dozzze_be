@@ -167,23 +167,23 @@ MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 
 
 JAZZMIN_SETTINGS = {
-    "site_logo": "images/logo.png",         # logo para el admin
+    "site_logo": "images/logo.png",  # logo para el admin
     "site_icon": "images/favicon.png",
     "site_title": "Admin Panel",
     "site_header": "Panel Administrativo DOZZZE",
     "site_brand": "DOZZZE",
-    "welcome_sign": "Bienvenido al panel de administración", "copyright": "DOZZZE",
-      "order_with_respect_to": [
-        "auth.User", # User Menu
+    "welcome_sign": "Bienvenido al panel de administración",
+    "copyright": "DOZZZE",
+    "order_with_respect_to": [
+        "auth.User",  # User Menu
         "auth.Group",
-        "zones.Zone", # Zone Menu
-        "properties.Property", #Property Menu
+        "zones.Zone",  # Zone Menu
+        "properties.Property",  # Property Menu
         "properties.Room",
         "properties.Service",
         "properties.CommunicationMethod",
     ],
     "custom_css": "css/admin_custom.css",
-
     # "theme": "flatly",
     "changeform_format": "horizontal_tabs",
     "icons": {
@@ -197,7 +197,7 @@ JAZZMIN_SETTINGS = {
         "properties.Room": "fas fa-door-open",
         "properties.CommunicationMethod": "fas fa-comment-dots",
         "properties.Service": "fas fa-concierge-bell",
-    }
+    },
 }
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
