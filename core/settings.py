@@ -203,5 +203,5 @@ JAZZMIN_SETTINGS = {
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CSRF_TRUSTED_ORIGINS = [
     "https://dozzzebe-production.up.railway.app",
-    "181.169.99.158:3000",
+    "http://181.169.99.158:3000",
 ]
