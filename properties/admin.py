@@ -1,12 +1,15 @@
 from datetime import date
 
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.gis.admin import GISModelAdmin
 from django.forms.models import BaseInlineFormSet
+from django.http import HttpResponseRedirect
+from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+# from pms.utils.property_helper_factory import get_property_helper
 from reservations.models import Reservation
 
 from .models import (
@@ -16,6 +19,7 @@ from .models import (
     Room,
     RoomImage,
     Service,
+    TermsAndConditions,
 )
 
 
@@ -28,6 +32,11 @@ class RoomInline(admin.StackedInline):
     model = Room
     extra = 1
     show_change_link = True
+
+
+class TermsAndConditionsInline(admin.StackedInline):
+    model = TermsAndConditions
+    extra = 1
 
 
 class CommunicationMethodInline(admin.TabularInline):
@@ -109,13 +118,18 @@ class PropertyAdmin(GISModelAdmin):
         js = ("js/addPoligon.js",)
         css = {"all": ("css/map_solution.css",)}
 
-    inlines = [PropertyImageInline, RoomInline, CommunicationMethodInline]
+    inlines = [
+        PropertyImageInline,
+        RoomInline,
+        CommunicationMethodInline,
+        TermsAndConditionsInline,
+    ]  # add "current_reservations"
+    search_fields = ["name", "location", "rooms__pax"]
     list_display = (
         "name",
         "cover_preview",
         "location",
-    )  # add "current_reservations"
-    search_fields = ["name", "location", "rooms__pax"]
+    )
     # readonly_fields = ["reservations_table"]
 
     fieldsets = (
@@ -127,6 +141,12 @@ class PropertyAdmin(GISModelAdmin):
                     "zone",
                     "location",
                     "cover_image",
+                    "pms",
+                    "pms_token",
+                    "pms_hotel_identifier",
+                    "pms_username",
+                    "pms_password",
+                    "base_url",
                     "description",
                     "active",
                 )  # add 'reservations_table'
@@ -148,6 +168,85 @@ class PropertyAdmin(GISModelAdmin):
         return "-"
 
     cover_preview.short_description = "Cover"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:property_id>/sync-pms/",
+                self.admin_site.admin_view(self.sync_with_pms),
+                name="sync_property_with_pms",
+            ),
+        ]
+        return custom_urls + urls
+
+    def sync_with_pms(self, request, property_id):
+        prop = self.get_object(request, property_id)
+        if not prop:
+            self.message_user(request, "Propiedad no encontrada.", level=messages.ERROR)
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
+
+        necesary_fields = [
+            "pms",
+            "pms_token",
+            "pms_hotel_identifier",
+            "pms_username",
+            "pms_password",
+        ]
+        for field in necesary_fields:
+            if not getattr(prop, field):
+                self.message_user(
+                    request,
+                    f"Falta el campo {field} para sincronizar con PMS {prop.pms.name}.",
+                    level=messages.ERROR,
+                )
+                return HttpResponseRedirect(
+                    reverse("admin:properties_property_change", args=[prop.pk])
+                )
+
+        success = self.perform_pms_sync(prop)
+
+        if success:
+            self.message_user(
+                request,
+                f"Sincronización con PMS  {prop.pms.name}. exitosa",
+                level=messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                f"Fallo al sincronizar con el PMS {prop.pms.name}.",
+                level=messages.ERROR,
+            )
+
+        return HttpResponseRedirect(
+            reverse("admin:properties_property_change", args=[prop.pk])
+        )
+
+    def perform_pms_sync(self, prop):
+        # Tu lógica real de sincronización acá
+        # helper = get_property_helper(prop.pms)
+
+        # Definí el rango de fechas que querés usar (ejemplo: 1 mes)
+        # start_date_id = 202301  # ejemplo: YYYYMM
+        # end_date_id = 202312
+
+        # Hacemos las extracciones necesarias
+        # availability = helper.download_availability(prop, start_date_id, end_date_id)
+        # revenue = helper.download_revenue(prop, start_date_id, end_date_id)
+        # blocked = helper.download_blocked(prop, start_date_id, end_date_id)
+
+        return bool(prop.pms and prop.pms_token)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        extra_context = extra_context or {}
+        sync_url = reverse("admin:sync_property_with_pms", args=[object_id])
+        extra_context["sync_button"] = format_html(
+            '<a class="btn btn-info" href="{}">Sincronizar con PMS</a>', sync_url
+        )
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
 
     # def current_reservations(self, obj):
     #     return Reservation.objects.filter(room__property=obj, check_out__gte=timezone.now().date()).count()

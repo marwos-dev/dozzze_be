@@ -21,6 +21,7 @@ class RoomOut(Schema):
     services: List[str]
     images: Optional[List[str]]
     property_id: int
+    type: str
 
     @staticmethod
     def resolve_services(obj):
@@ -38,6 +39,14 @@ class RoomOut(Schema):
         )
 
 
+class TermsAndConditionsOut(Schema):
+    condition_of_confirmation: str
+    check_in_time: str
+    check_out_time: str
+    cancellation_policy: str
+    additional_information: str
+
+
 class PropertyOut(Schema):
     id: int
     name: str
@@ -53,6 +62,7 @@ class PropertyOut(Schema):
     rooms: Optional[List[RoomOut]]
     communication_methods: Optional[List[str]]
     location: Optional[str]
+    terms_and_conditions: Optional[TermsAndConditionsOut]
 
     @staticmethod
     def resolve_zone(obj):

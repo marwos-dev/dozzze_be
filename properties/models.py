@@ -47,6 +47,26 @@ class Property(models.Model):
         blank=True,
         verbose_name="Zona",
     )
+    base_url = models.CharField(
+        max_length=255, verbose_name="Base URL", default=None, blank=True, null=True
+    )
+    email = models.EmailField(verbose_name="Email", default=None, blank=True, null=True)
+    phone_number = models.CharField(
+        max_length=255, verbose_name="Teléfono", default=None, blank=True, null=True
+    )
+    pms_token = models.CharField(null=True, blank=True, default=None)
+    pms_hotel_identifier = models.CharField(null=True, blank=True, default=None)
+    pms_username = models.CharField(null=True, blank=True, default=None)
+    pms_password = models.CharField(null=True, blank=True, default=None)
+    pms = models.ForeignKey(
+        "pms.PMS",
+        related_name="properties",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        default=None,
+        verbose_name="PMS",
+    )
 
     class Meta:
         db_table = "properties"
@@ -156,3 +176,35 @@ class CommunicationMethod(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TermsAndConditions(models.Model):
+    property = models.OneToOneField(
+        Property, related_name="terms_and_conditions", on_delete=models.CASCADE
+    )
+    condition_of_confirmation = models.TextField(
+        null=True, blank=True, verbose_name="Condición de Confirmación"
+    )
+    check_in_time = models.CharField(
+        max_length=50, null=True, blank=True, verbose_name="Hora de Check-in"
+    )
+    check_out_time = models.CharField(
+        max_length=50, null=True, blank=True, verbose_name="Hora de Check-out"
+    )
+    cancellation_policy = models.TextField(
+        null=True, blank=True, verbose_name="Política de Cancelación"
+    )
+    additional_information = models.TextField(
+        null=True, blank=True, verbose_name="Información Adicional"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Actualizado el")
+
+    class Meta:
+        db_table = "terms_and_conditions"
+        verbose_name = "Términos y Condiciones"
+        verbose_name_plural = "Términos y Condiciones"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Términos y Condiciones de {self.property.name}"
