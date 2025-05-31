@@ -62,7 +62,7 @@ class PropertyOut(Schema):
     rooms: Optional[List[RoomOut]]
     communication_methods: Optional[List[str]]
     location: Optional[str]
-    terms_and_conditions: Optional[TermsAndConditionsOut]
+    terms_and_conditions: Optional[TermsAndConditionsOut] = None
 
     @staticmethod
     def resolve_zone(obj):
@@ -98,3 +98,10 @@ class PropertyOut(Schema):
     @staticmethod
     def resolve_location(obj):
         return obj.location.geojson if obj.location else None
+
+
+    @staticmethod
+    def resolve_terms_and_conditions(obj):
+        if obj.terms_and_conditions:
+            return obj.terms_and_conditions
+        return None
