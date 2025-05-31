@@ -1,5 +1,6 @@
 FROM python:3.11-alpine
 
+
 # Establece el directorio de trabajo
 WORKDIR /app
 
