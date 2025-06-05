@@ -1,5 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load i18n static %}
+{% csrf_token %}
 
 {% block object-tools %}
     {{ block.super }}
