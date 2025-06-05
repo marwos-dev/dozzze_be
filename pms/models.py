@@ -6,6 +6,9 @@ from django.db import models
 class PMS(models.Model):
     name = models.CharField(max_length=255, unique=True)
     active = models.BooleanField(default=True)
+    pms_external_id = models.CharField(
+        max_length=255, unique=True, blank=True, null=True
+    )
     has_integration = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

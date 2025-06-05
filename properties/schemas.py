@@ -99,7 +99,6 @@ class PropertyOut(Schema):
     def resolve_location(obj):
         return obj.location.geojson if obj.location else None
 
-
     @staticmethod
     def resolve_terms_and_conditions(obj):
         if obj.terms_and_conditions:

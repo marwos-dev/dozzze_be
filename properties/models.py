@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import uuid4
 
 from django.contrib.gis.db import models as geomodels
@@ -47,17 +48,6 @@ class Property(models.Model):
         blank=True,
         verbose_name="Zona",
     )
-    base_url = models.CharField(
-        max_length=255, verbose_name="Base URL", default=None, blank=True, null=True
-    )
-    email = models.EmailField(verbose_name="Email", default=None, blank=True, null=True)
-    phone_number = models.CharField(
-        max_length=255, verbose_name="Teléfono", default=None, blank=True, null=True
-    )
-    pms_token = models.CharField(null=True, blank=True, default=None)
-    pms_hotel_identifier = models.CharField(null=True, blank=True, default=None)
-    pms_username = models.CharField(null=True, blank=True, default=None)
-    pms_password = models.CharField(null=True, blank=True, default=None)
     pms = models.ForeignKey(
         "pms.PMS",
         related_name="properties",
@@ -108,11 +98,21 @@ class Room(models.Model):
     APARTMENT = "apartment"
     STUDIO = "studio"
     DUPLEX = "duplex"
+    ROOM = "room"
+    SUITE = "suite"
+    LOFT = "loft"
+    CABIN = "cabin"
+    PENTHOUSE = "penthouse"
 
     ROOM_TYPES = [
         (APARTMENT, "Apartment"),
         (STUDIO, "Studio"),
         (DUPLEX, "Duplex"),
+        (ROOM, "Room"),
+        (SUITE, "Suite"),
+        (LOFT, "Loft"),
+        (CABIN, "Cabin"),
+        (PENTHOUSE, "Penthouse"),
     ]
 
     property = models.ForeignKey(
@@ -123,6 +123,9 @@ class Room(models.Model):
     description = models.TextField()
     pax = models.PositiveIntegerField()
     services = models.ManyToManyField(Service, blank=True)
+    external_id = models.CharField(max_length=255, null=True, blank=True)
+    external_room_type_id = models.CharField(max_length=255, null=True, blank=True)
+    external_room_type_name = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "rooms"
@@ -138,6 +141,33 @@ class Room(models.Model):
         return not self.reservations.filter(
             check_in__lt=check_out, check_out__gt=check_in
         ).exists()
+
+    @classmethod
+    def get_type_room_from_name(cls, name) -> Optional[str]:
+        if (
+            "habitacion" in name.lower()
+            or "room" in name.lower()
+            or "cuarto" in name.lower()
+        ):
+            return cls.ROOM
+
+        if (
+            "apartamento" in name.lower()
+            or "apartament" in name.lower()
+            or "departamento" in name.lower()
+        ):
+            return cls.APARTMENT
+
+        if "estudio" in name.lower() or "studio" in name.lower():
+            return cls.STUDIO
+
+        for room_type in cls.ROOM_TYPES:
+            if room_type[1].lower() in name.lower():
+                return room_type[0]
+
+        print(f"Tipo de habitación desconocido para el nombre: {name}")
+        print("Por defecto, se asignará 'Room'.")
+        return cls.ROOM
 
 
 def room_image_upload_path(instance, filename):
@@ -208,3 +238,64 @@ class TermsAndConditions(models.Model):
 
     def __str__(self):
         return f"Términos y Condiciones de {self.property.name}"
+
+
+class PmsDataProperty(models.Model):
+    property = models.OneToOneField(
+        Property, related_name="pms_data", on_delete=models.CASCADE
+    )
+    base_url = models.CharField(
+        max_length=255, verbose_name="Base URL", default=None, blank=True, null=True
+    )
+    email = models.EmailField(verbose_name="Email", default=None, blank=True, null=True)
+    phone_number = models.CharField(
+        max_length=255, verbose_name="Teléfono", default=None, blank=True, null=True
+    )
+    pms_token = models.CharField(null=True, blank=True, default=None)
+    pms_hotel_identifier = models.CharField(null=True, blank=True, default=None)
+    pms_username = models.CharField(null=True, blank=True, default=None)
+    pms_password = models.CharField(null=True, blank=True, default=None)
+
+    pms_property_id = models.PositiveIntegerField(null=True, blank=True, default=None)
+    pms_property_name = models.CharField(
+        max_length=255, null=True, blank=True, default=None
+    )
+    pms_property_address = models.CharField(
+        max_length=255, null=True, blank=True, default=None
+    )
+    pms_property_city = models.CharField(
+        max_length=255, null=True, blank=True, default=None
+    )
+    pms_property_province = models.CharField(
+        max_length=255, null=True, blank=True, default=None
+    )
+    pms_property_postal_code = models.CharField(
+        max_length=20, null=True, blank=True, default=None
+    )
+    pms_property_country = models.CharField(
+        max_length=255, null=True, blank=True, default=None
+    )
+    pms_property_latitude = models.FloatField(
+        null=True, blank=True, default=None, verbose_name="Latitud"
+    )
+    pms_property_longitude = models.FloatField(
+        null=True, blank=True, default=None, verbose_name="Longitud"
+    )
+    pms_property_phone = models.CharField(
+        max_length=255, null=True, blank=True, default=None, verbose_name="Teléfono PMS"
+    )
+    pms_property_category = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        default=None,
+        verbose_name="Categoría PMS",
+    )
+
+    class Meta:
+        db_table = "pms_data_property"
+        verbose_name = "Datos PMS"
+        verbose_name_plural = "Datos PMS"
+
+    def __str__(self):
+        return f"PMS Data for {self.property.name}"

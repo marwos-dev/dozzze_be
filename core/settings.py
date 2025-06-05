@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-(y4si_+axe6qoukrek*a=nfzc97!6d&m6p^&re&)v*m4c)b@3n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app"]
+# ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app"]
 
 # Application definition
 
@@ -94,9 +94,9 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.getenv("DB_NAME", "mydb"),
-        "USER": os.getenv("DB_USER", "user"),
-        "PASSWORD": os.getenv("DB_PASSWORD", "password"),
+        "NAME": os.getenv("DB_NAME", "motor_reservas"),
+        "USER": os.getenv("DB_USER", "marcosolmedo"),
+        "PASSWORD": os.getenv("DB_PASSWORD", "40575526"),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": "5432",
     }
@@ -203,5 +203,4 @@ JAZZMIN_SETTINGS = {
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CSRF_TRUSTED_ORIGINS = [
     "https://dozzzebe-production.up.railway.app",
-    "181.169.99.158:3000",
 ]

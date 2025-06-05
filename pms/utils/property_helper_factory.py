@@ -1,13 +1,24 @@
-# from .FnsPropertyHelper import FnsPropertyHelper
+from abc import ABC, abstractmethod
+from typing import Dict, Type
 
-PMS_HELPER_MAP = {
-    # "fns": FnsPropertyHelper,
-    # 'otro_pms': OtroPMSHelper,
-}
+from pms.utils.helpers import FnsPropertyHelper
+from properties.models import Property
+from utils.SingletonMeta import SingletonMeta
 
 
-def get_property_helper(pms_code: str):
-    helper_class = PMS_HELPER_MAP.get(pms_code.lower())
-    if not helper_class:
-        raise ValueError(f"No helper class found for PMS: {pms_code}")
-    return helper_class()
+class PropertyHelper(ABC):
+    @abstractmethod
+    def process_property(self):
+        pass
+
+
+class PMSHelperFactory(metaclass=SingletonMeta):
+    _helpers: Dict[int, Type[PropertyHelper]] = {
+        1: FnsPropertyHelper,
+    }
+
+    def get_helper(self, prop: Property) -> PropertyHelper:
+        helper_class = self._helpers.get(prop.pms_id)
+        if helper_class is None:
+            raise ValueError(f"PMS ID {prop.pms_id} no soportado")
+        return helper_class(prop)
