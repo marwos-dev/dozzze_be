@@ -7,16 +7,18 @@ from .errors import PmsAccessDenied, PmsBadRequest, PmsNotFound, PmsUnauthorized
 
 
 class ApiCall(AbstractConnectionManager):
-    def __init__(self,
-                 domain=None,
-                 api_prefix='',
-                 auth_type: str = 'header',
-                 authorization: Dict = None, username: str = None,
-                 password: str = None,
-                 verify=True,
-                 proxies=None,
-                 auth_api=None
-                 ):
+    def __init__(
+        self,
+        domain=None,
+        api_prefix="",
+        auth_type: str = "header",
+        authorization: Dict = None,
+        username: str = None,
+        password: str = None,
+        verify=True,
+        proxies=None,
+        auth_api=None,
+    ):
         """Creates a wrapper to perform API actions.
 
         Instances:
@@ -32,9 +34,9 @@ class ApiCall(AbstractConnectionManager):
         self.auth_api = auth_api
 
         # Configure authentication
-        if auth_type == 'basic':
+        if auth_type == "basic":
             self._session.auth = (username, password)
-        elif auth_type == 'header' and authorization:
+        elif auth_type == "header" and authorization:
             self._session.headers.update(authorization)
 
     def _action(self, req, **kwargs):
@@ -60,8 +62,9 @@ class ApiCall(AbstractConnectionManager):
             error_message = j.get("message")
 
         if req.status_code == 400:
-            error_message = error_message + ('. Try sending '
-                                             'json=payload not data=payload')
+            error_message = error_message + (
+                ". Try sending " "json=payload not data=payload"
+            )
             raise PmsBadRequest(error_message)
         elif req.status_code == 401:
             print(error_message)
@@ -100,7 +103,7 @@ class ApiCall(AbstractConnectionManager):
         if params is None:
             params = {}
 
-        print(f'Action: Get and url: {self._api_prefix + url}')
+        print(f"Action: Get and url: {self._api_prefix + url}")
         req = self._session.get(self._api_prefix + url, params=params)
 
         return self._action(req, **kwargs)
@@ -110,8 +113,8 @@ class ApiCall(AbstractConnectionManager):
         if data is None:
             data = {}
 
-        print(f'Action: Post and url: {self._api_prefix + url}')
-        kwargs.pop('prop', None)
+        print(f"Action: Post and url: {self._api_prefix + url}")
+        kwargs.pop("prop", None)
         # kwargs.pop('use_api_v1', None)
         # todo arreglar para cuando se intente enviar precios y el token haya expirado
         # TODO mantener la logica, que haga re-login y siga con lo que le toca.
@@ -123,7 +126,7 @@ class ApiCall(AbstractConnectionManager):
         if data is None:
             data = {}
 
-        print(f'Action: Put and url: {self._api_prefix + url}')
+        print(f"Action: Put and url: {self._api_prefix + url}")
         req = self._session.put(self._api_prefix + url, data=data)
         return self._action(req, **kwargs)
 

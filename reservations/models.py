@@ -43,6 +43,14 @@ class Reservation(models.Model):
         (CANCELLED, "Cancelled"),
         (OK, "Ok"),
     ]
+    property = models.ForeignKey(
+        "properties.Property",
+        on_delete=models.CASCADE,
+        related_name="reservations",
+        verbose_name="Propiedad",
+        blank=True,
+        null=True,
+    )
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="Estado"
     )
@@ -112,6 +120,8 @@ class Reservation(models.Model):
         on_delete=models.CASCADE,
         related_name="reservations",
         verbose_name="Usuario",
+        null=True,
+        blank=True,
     )
     pax_count = models.IntegerField(default=1, verbose_name="Cantidad de personas")
 

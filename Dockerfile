@@ -1,12 +1,11 @@
 # Usa una imagen base de Python 3.11 en Alpine
-FROM python:3.11-alpine
+FROM python:3.12.10-alpine3.22
 
 # Establece el directorio de trabajo
 WORKDIR /app
 
 # Instala las dependencias del sistema necesarias para GDAL, GEOS y PostgreSQL
 RUN apk add --no-cache \
-    python3=3.12.10-r0 \
     py3-pip \
     gdal-dev \
     geos-dev \

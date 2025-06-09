@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from ninja import Schema
 
-from utils.s3_utils import generate_presigned_url
+from utils import generate_presigned_url
 
 
 class PropertySearchInput(Schema):
@@ -11,6 +11,32 @@ class PropertySearchInput(Schema):
     pax: int
     checkin: date
     checkout: date
+
+
+class Price(Schema):
+    price: float
+    occupancy: int
+
+
+class Rate(Schema):
+    rate_external_id: Optional[str] = None
+    availability: int  # ForeignKey to Availability, represented as an int for simplicity
+    prices: List[Price]
+    restriction: Optional[dict] = None  # JSONField for restrictions
+
+
+class AvailabilityOut(Schema):
+    date: date
+    availability: int
+    rates: List[Rate]
+
+
+class RoomTypeOut(Schema):
+    id: int
+    name: str
+    external_id: str
+    description: str
+    availability: List[AvailabilityOut]
 
 
 class RoomOut(Schema):
@@ -59,7 +85,7 @@ class PropertyOut(Schema):
     # calculated fields
     cover_image: Optional[str]
     images: Optional[List[str]]
-    rooms: Optional[List[RoomOut]]
+    room_types: Optional[List[RoomTypeOut]]
     communication_methods: Optional[List[str]]
     location: Optional[str]
     terms_and_conditions: Optional[TermsAndConditionsOut] = None
@@ -84,10 +110,6 @@ class PropertyOut(Schema):
         return generate_presigned_url(obj.cover_image.name) if obj.cover_image else None
 
     @staticmethod
-    def resolve_rooms(obj):
-        return obj.rooms.all() if obj.rooms else None
-
-    @staticmethod
     def resolve_communication_methods(obj):
         return (
             [method.name for method in obj.communication_methods.all()]
@@ -104,3 +126,5 @@ class PropertyOut(Schema):
         if obj.terms_and_conditions:
             return obj.terms_and_conditions
         return None
+
+

@@ -1,4 +1,5 @@
 from utils.SingletonMeta import SingletonMeta
+
 from .ApiCall import ApiCall
 
 

@@ -1,30 +1,46 @@
 version: '3.9'
 
 services:
+
+
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_USER: motor_reserva
+      POSTGRES_PASSWORD: motor_reserva
+      POSTGRES_DB: motor_reservas
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+        - "5432:5432"
+
+  celery:
+    build: .
+    command: bin/celery.sh
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   web:
     build: .
-    command: ["/app/bin/production.sh"]
+    ports:
+      - "8000:8000"
+
     env_file:
       - .env
     volumes:
       - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/ssl:/etc/letsencrypt
-      - ./nginx/ssl-data:/var/www/certbot
-      - static_volume:/app/static
-      - media_volume:/app/media
     depends_on:
-      - web
-#
+      - db
+
 #  certbot:
 #    image: certbot/certbot
 #    volumes:
@@ -41,3 +57,4 @@ services:
 volumes:
   static_volume:
   media_volume:
+  pgdata:

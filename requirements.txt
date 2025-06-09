@@ -22,5 +22,6 @@ django-cors-headers==4.3.1
 gunicorn
 whitenoise
 django-jazzmin==3.0.1
-
 requests~=2.32.3
+django-celery-beat~=2.8.1
+celery~=5.2.3

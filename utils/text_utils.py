@@ -1,5 +1,6 @@
 import re
 
+
 def extract_pax(text):
     match = re.search(r"(\d+)\s*pax", text.lower())
     if match:

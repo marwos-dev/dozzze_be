@@ -9,7 +9,8 @@ def get_ddate_id(_date: Union[str, date, datetime, None] = None) -> int:
     """
     Calcula el ID de la fecha basado en los días transcurridos desde BASE_DATE.
 
-    :param _date: Fecha para calcular el ID. Puede ser un objeto date, datetime, un string 'YYYY-MM-DD', o None para usar la fecha actual.
+    :param _date: Fecha para calcular el ID. Puede ser un objeto date,
+     datetime, un string 'YYYY-MM-DD', o None para usar la fecha actual.
     :return: Número entero representando el ID de la fecha.
     :raises ValueError: Si el tipo de entrada no es válido o el formato de la fecha es incorrecto.
     """
@@ -19,11 +20,15 @@ def get_ddate_id(_date: Union[str, date, datetime, None] = None) -> int:
         try:
             _date = datetime.strptime(_date, "%Y-%m-%d").date()
         except ValueError:
-            raise ValueError(f"Formato de fecha inválido: {_date}. Use el formato 'YYYY-MM-DD'.")
+            raise ValueError(
+                f"Formato de fecha inválido: {_date}. Use el formato 'YYYY-MM-DD'."
+            )
     elif isinstance(_date, datetime):
         _date = _date.date()
     elif not isinstance(_date, date):
-        raise ValueError(f"Tipo de entrada no válido: {type(_date)}. Use None, str, date, o datetime.")
+        raise ValueError(
+            f"Tipo de entrada no válido: {type(_date)}. Use None, str, date, o datetime."
+        )
 
     return _cached_get_ddate_id(_date)
 

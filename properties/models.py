@@ -57,6 +57,11 @@ class Property(models.Model):
         default=None,
         verbose_name="PMS",
     )
+    use_pms_information = models.BooleanField(
+        default=False,
+        verbose_name="Usar información del PMS",
+        help_text="Si está marcado, se utilizará la información del PMS para esta propiedad.",
+    )
 
     class Meta:
         db_table = "properties"
@@ -94,31 +99,39 @@ class PropertyImage(models.Model):
         return f"Image of {self.property.name}"
 
 
+class RoomType(models.Model):
+    name = models.CharField(max_length=50, unique=True, verbose_name="Nombre")
+    external_id = models.CharField(
+        max_length=255, null=True, blank=True, verbose_name="ID Externo"
+    )
+    description = models.TextField(blank=True, null=True, verbose_name="Descripción")
+
+    class Meta:
+        db_table = "room_types"
+        verbose_name = "Tipo de Habitación"
+        verbose_name_plural = "Tipos de Habitaciones"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+    def photos_of_room_type(self):
+        return self.rooms.filter(images__isnull=False).values_list('images__image', flat=True)
+
+
 class Room(models.Model):
-    APARTMENT = "apartment"
-    STUDIO = "studio"
-    DUPLEX = "duplex"
-    ROOM = "room"
-    SUITE = "suite"
-    LOFT = "loft"
-    CABIN = "cabin"
-    PENTHOUSE = "penthouse"
-
-    ROOM_TYPES = [
-        (APARTMENT, "Apartment"),
-        (STUDIO, "Studio"),
-        (DUPLEX, "Duplex"),
-        (ROOM, "Room"),
-        (SUITE, "Suite"),
-        (LOFT, "Loft"),
-        (CABIN, "Cabin"),
-        (PENTHOUSE, "Penthouse"),
-    ]
-
     property = models.ForeignKey(
         Property, related_name="rooms", on_delete=models.CASCADE
     )
-    type = models.CharField(max_length=20, choices=ROOM_TYPES, verbose_name="Tipo")
+    type = models.ForeignKey(
+        RoomType,
+        related_name="rooms",
+        on_delete=models.CASCADE,
+        verbose_name="Tipo de Habitación",
+        null=True,
+        blank=True,
+    )
     name = models.CharField(max_length=255)
     description = models.TextField()
     pax = models.PositiveIntegerField()
@@ -145,16 +158,16 @@ class Room(models.Model):
     @classmethod
     def get_type_room_from_name(cls, name) -> Optional[str]:
         if (
-            "habitacion" in name.lower()
-            or "room" in name.lower()
-            or "cuarto" in name.lower()
+                "habitacion" in name.lower()
+                or "room" in name.lower()
+                or "cuarto" in name.lower()
         ):
             return cls.ROOM
 
         if (
-            "apartamento" in name.lower()
-            or "apartament" in name.lower()
-            or "departamento" in name.lower()
+                "apartamento" in name.lower()
+                or "apartament" in name.lower()
+                or "departamento" in name.lower()
         ):
             return cls.APARTMENT
 
@@ -291,6 +304,10 @@ class PmsDataProperty(models.Model):
         default=None,
         verbose_name="Categoría PMS",
     )
+    first_sync = models.BooleanField(
+        default=True,
+        verbose_name="Primera sincronización",
+    )
 
     class Meta:
         db_table = "pms_data_property"
@@ -299,3 +316,27 @@ class PmsDataProperty(models.Model):
 
     def __str__(self):
         return f"PMS Data for {self.property.name}"
+
+
+class Availability(models.Model):
+    property = models.ForeignKey(
+        Property, related_name="availability", on_delete=models.CASCADE
+    )
+    room_type = models.ForeignKey(
+        RoomType,
+        related_name="availability",
+        on_delete=models.CASCADE,
+        verbose_name="Tipo de Habitación",
+    )
+    date = models.DateField()
+    availability = models.IntegerField()
+    rates = models.JSONField(null=True, blank=True, default=None)
+
+    class Meta:
+        db_table = "availability"
+        verbose_name = "Disponibilidad"
+        verbose_name_plural = "Disponibilidades"
+        unique_together = ("property", "room_type", "date")
+        ordering = ["-date"]
+
+

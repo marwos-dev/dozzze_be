@@ -3,7 +3,7 @@ from typing import List, Optional
 from ninja import Schema
 
 from properties.schemas import PropertyOut
-from utils.s3_utils import generate_presigned_url
+from utils import generate_presigned_url
 
 
 class ZoneOut(Schema):

@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from properties.models import (CommunicationMethod, PmsDataProperty, Room, RoomImage, TermsAndConditions, PropertyImage)
+from properties.models import (
+    CommunicationMethod,
+    PmsDataProperty,
+    PropertyImage,
+    Room,
+    RoomImage,
+    TermsAndConditions,
+)
 
 
 class RoomImageInline(admin.TabularInline):
@@ -30,6 +37,7 @@ class PMSDataInline(admin.StackedInline):
     can_delete = False
 
     readonly_fields = [
+        "first_sync",
         "pms_property_id",
         "pms_property_name",
         "pms_property_address",
@@ -42,6 +50,7 @@ class PMSDataInline(admin.StackedInline):
         "pms_property_phone",
         "pms_property_category",
     ]
+
 
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage

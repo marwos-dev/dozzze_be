@@ -27,9 +27,10 @@ SECRET_KEY = "django-insecure-(y4si_+axe6qoukrek*a=nfzc97!6d&m6p^&re&)v*m4c)b@3n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app"]
+ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app", "web.motor-reservas.orb.local", "localhost"]
 
 # Application definition
+
 
 INSTALLED_APPS = [
     "jazzmin",
@@ -41,12 +42,18 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "storages",
     "django.contrib.gis",
+    "corsheaders",
+    "django_celery_beat"
+]
+
+LOCAL_APPS = [
     "properties",
     "reservations",
     "zones",
     "pms",
-    "corsheaders",
 ]
+
+INSTALLED_APPS += LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -149,6 +156,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Configuración para usar Amazon S3
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
+# Configuración de Amazon S3
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")  # o la región que uses
 AWS_QUERYSTRING_AUTH = False  # para que los links no tengan tokens de expiración
 AWS_S3_FILE_OVERWRITE = False
@@ -158,15 +166,14 @@ AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-# MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.us-east-1.amazonaws.com/"
 
+# Frontend secret token
 MY_FRONTEND_SECRET_TOKEN = os.getenv("MY_FRONTEND_SECRET_TOKEN")
 
-# Opcional:
-
-
+# Configuración de Jazzmin para el panel de administración
 JAZZMIN_SETTINGS = {
+    "bootstrap_version": "5",
     "site_logo": "images/logo.png",  # logo para el admin
     "site_icon": "images/favicon.png",
     "site_title": "Admin Panel",
@@ -192,8 +199,7 @@ JAZZMIN_SETTINGS = {
         "auth.Group": "fas fa-users",
         "zones.Zone": "fas fa-map-marked-alt",
         "properties.Property": "fas fa-building",
-        # "reservations.Reservartion": "fas fa-calendar-check",
-        # "properties": "fas fa-bed",
+        "reservations.Reservartion": "fas fa-calendar-check",
         "properties.Room": "fas fa-door-open",
         "properties.CommunicationMethod": "fas fa-comment-dots",
         "properties.Service": "fas fa-concierge-bell",
@@ -204,3 +210,10 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CSRF_TRUSTED_ORIGINS = [
     "https://dozzzebe-production.up.railway.app",
 ]
+
+# Celery
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'

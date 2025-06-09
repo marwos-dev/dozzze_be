@@ -1,9 +1,10 @@
 import threading
-from typing import Dict, Any, Type
+from typing import Any, Dict, Type
 
 
 class SingletonMeta(type):
     """Thread-safe implementation of Singleton pattern using metaclass."""
+
     _instances: Dict[Type, Any] = {}
     _lock: threading.RLock = threading.RLock()
 
