@@ -2,7 +2,6 @@ version: '3.9'
 
 services:
 
-
   db:
     image: postgis/postgis:15-3.3
     environment:
@@ -13,14 +12,6 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
         - "5432:5432"
-
-  celery:
-    build: .
-    command: bin/celery.sh
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
 
   redis:
     image: redis:7-alpine
@@ -40,6 +31,24 @@ services:
       - media_volume:/app/media
     depends_on:
       - db
+
+  celery_worker:
+    build: .
+    command: celery -A core worker --loglevel=info --concurrency=4
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - web
+
+  celery_beat:
+    build: .
+    command: celery -A core beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - web
 
 #  certbot:
 #    image: certbot/certbot

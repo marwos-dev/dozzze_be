@@ -1,37 +1,48 @@
+<<<<<<< Updated upstream
 # Usa una imagen base de Python 3.11 en Alpine
 FROM python:3.12.10-alpine3.22
+=======
+FROM python:3.11-alpine
+>>>>>>> Stashed changes
 
 # Establece el directorio de trabajo
 WORKDIR /app
 
-# Instala las dependencias del sistema necesarias para GDAL, GEOS y PostgreSQL
+# Instala dependencias del sistema necesarias
 RUN apk add --no-cache \
-    py3-pip \
+    python3=3.12.11-r0 \
+    bash \
+    build-base \
     gdal-dev \
     geos-dev \
     proj-dev \
     libpq-dev \
-    build-base \
-    bash \
+    postgresql-dev \
+    py3-pip \
+    python3-dev \
+    musl-dev \
     && ln -sf python3 /usr/bin/python
 
-# Asegúrate de que las bibliotecas de GEOS estén enlazadas correctamente
-RUN ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos_c.dylib
+# Link simbólico para GEOS (a veces requerido por dependencias C)
+RUN ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos_c.dylib || true
 
-# Copia el archivo requirements.txt al contenedor
+# Link simbólico si falta libgdal.so
+RUN [ -f /usr/lib/libgdal.so ] || ln -s /usr/lib/libgdal.so.* /usr/lib/libgdal.so
+
+# Configura variables de entorno para librerías compartidas
+ENV GEOS_LIBRARY_PATH=/usr/lib/libgeos_c.so.1
+ENV GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
+
+# Copia el archivo de requerimientos
 COPY requirements.txt .
 
-# Actualiza pip e instala las dependencias de Python
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Instala dependencias de Python
+RUN pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
 
-# Configura la variable de entorno para GEOS
-ENV GEOS_LIBRARY_PATH=/usr/lib/libgeos_c.so.1
-
-# Copia todo el código (en dev, luego se sobreescribe por volumen)
+# Copia el resto del código fuente
 COPY . .
 
-# Expone el puerto 8000
+# Exponer el puerto de desarrollo
 EXPOSE 8000
-
 
 CMD ["bin/dev.sh"]

@@ -24,4 +24,7 @@ whitenoise
 django-jazzmin==3.0.1
 requests~=2.32.3
 django-celery-beat~=2.8.1
-celery~=5.2.3
+celery==5.2.3
+redis==3.5.3
+
+python-dotenv~=1.1.0
