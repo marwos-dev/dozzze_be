@@ -1,37 +1,39 @@
-# Usa una imagen base de Python 3.11 en Alpine
 FROM python:3.12.10-alpine3.22
 
-# Establece el directorio de trabajo
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Instala las dependencias del sistema necesarias para GDAL, GEOS y PostgreSQL
+# Instalar dependencias del sistema (incluyendo GDAL, GEOS y PostgreSQL)
 RUN apk add --no-cache \
-    py3-pip \
+    bash \
     gdal-dev \
     geos-dev \
     proj-dev \
     libpq-dev \
     build-base \
-    bash \
+    python3-dev \
+    postgresql-dev \
+    musl-dev \
+    jpeg-dev \
+    zlib-dev \
+    py3-pip \
     && ln -sf python3 /usr/bin/python
 
-# Asegúrate de que las bibliotecas de GEOS estén enlazadas correctamente
-RUN ln -s /usr/lib/libgeos_c.so /usr/lib/libgeos_c.dylib
-
-# Copia el archivo requirements.txt al contenedor
+# Copiar archivo de requerimientos
 COPY requirements.txt .
 
-# Actualiza pip e instala las dependencias de Python
+# Instalar dependencias de Python
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Configura la variable de entorno para GEOS
-ENV GEOS_LIBRARY_PATH=/usr/lib/libgeos_c.so.1
-
-# Copia todo el código (en dev, luego se sobreescribe por volumen)
+# Copiar código fuente
 COPY . .
 
-# Expone el puerto 8000
+# Variables de entorno para GDAL y GEOS (ajustadas para Alpine/Linux)
+ENV GEOS_LIBRARY_PATH=/usr/lib/libgeos_c.so
+ENV GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
+
+# Exponer puerto
 EXPOSE 8000
 
-
+# Comando por defecto
 CMD ["bin/dev.sh"]
