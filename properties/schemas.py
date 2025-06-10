@@ -35,8 +35,8 @@ class RoomTypeOut(Schema):
     id: int
     name: str
     external_id: str
-    description: str
-    availability: List[AvailabilityOut]
+    description: Optional[str] = None
+    # availability: List[AvailabilityOut]
 
 
 class RoomOut(Schema):
@@ -126,5 +126,13 @@ class PropertyOut(Schema):
         if obj.terms_and_conditions:
             return obj.terms_and_conditions
         return None
+
+    @staticmethod
+    def resolve_room_types(obj):
+        room_types = set()
+        for room in obj.rooms.all():
+            if room.type:
+                room_types.add(room.type)
+        return list(room_types) if room_types else None
 
 
