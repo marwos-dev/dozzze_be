@@ -55,12 +55,14 @@ class FnsPropertyHelper(BasePropertyHelper):
             print(f"Error downloading getRoomList: {e}")
             return {}
 
-    def download_reservations(self, prop: Property):
+    def download_reservations(self, prop: Property, checkin=None, checkout=None):
         """
         Download reservations from FNSROOMS.
 
         Args:
             prop: Property object containing PMS data.
+            checkin: Checkin date
+            checkout: Checkout date
 
         Returns:
             dict: A dictionary with reservation details.
@@ -72,7 +74,14 @@ class FnsPropertyHelper(BasePropertyHelper):
             )
             today = date.today()
             all_reservations = []
-            if prop.pms_data.first_sync:
+            if checkin and checkout:
+                # Si se pasan fechas de checkin y checkout, descargamos solo ese rango
+                first_day = checkin
+                last_day = checkout
+                all_reservations = self._get_reservations_for_range(
+                    first_day, last_day, api_call, prop
+                )
+            elif prop.pms_data.first_sync and not checkin and not checkout:
                 # Hacer una request por cada mes del año actual
                 for month in range(1, today.month + 1):
                     first_day = date(today.year, month, 1)
@@ -140,8 +149,7 @@ class FnsPropertyHelper(BasePropertyHelper):
     def download_availability(self, prop):
         try:
             apr = self.api_auth.init_call(
-                domain=prop.base_url,
-                authorization={"Cookie": prop.pms_data.pms_token}
+                domain=prop.base_url, authorization={"Cookie": prop.pms_data.pms_token}
             )
 
             availability_response = apr._get(
@@ -153,7 +161,9 @@ class FnsPropertyHelper(BasePropertyHelper):
                     "password": prop.pms_data.pms_password,
                 },
             )
-            availability = self._parse_availability(xml_string_availability=availability_response)
+            availability = self._parse_availability(
+                xml_string_availability=availability_response
+            )
             PMSDataResponse.objects.create(
                 pms=prop.pms,
                 property=prop,
@@ -162,14 +172,19 @@ class FnsPropertyHelper(BasePropertyHelper):
             )
             return availability
         except Exception as e:
+            print(f"Error downloading getAvailability: {e}")
             return {}
 
-    def download_rates_and_availability(self, prop: Property):
+    def download_rates_and_availability(
+        self, prop: Property, checkin=None, checkout=None
+    ):
         """
         Download rates and availability from FNSROOMS.
 
         Args:
             prop: Property object containing PMS data.
+            checkin: Checkin date (optional).
+            checkout: Checkout date (optional).
 
         Returns:
             dict: A dictionary with rates and availability.
@@ -183,23 +198,28 @@ class FnsPropertyHelper(BasePropertyHelper):
             today = date.today()
             start_date = None
             end_date = None
-            start_month =  1 if prop.pms_data.first_sync else today.month
-            end_month = today.month + 3
-            for month in range(1, today.month + 1):
-                if start_date is None:
-                    start_date = date(today.year, month, 1)
-
-                first_day = date(today.year, month, 1)
-                last_day = date(
-                    today.year, month, calendar.monthrange(today.year, month)[1]
+            if checkin and checkout:
+                # If checkin and checkout dates are provided, download only that range
+                start_date = checkin
+                end_date = checkout
+                all_rates = self._get_rates_and_availability_for_range(
+                    start_date, end_date, api_call, prop
                 )
-                monthly_rates = self._get_rates_and_availability_for_range(
-                    first_day, last_day, api_call, prop
-                )
-                end_date = last_day
-                all_rates.extend(monthly_rates)
-                time.sleep(2)
+            else:
+                for month in range(1, today.month + 1):
+                    if start_date is None:
+                        start_date = date(today.year, month, 1)
 
+                    first_day = date(today.year, month, 1)
+                    last_day = date(
+                        today.year, month, calendar.monthrange(today.year, month)[1]
+                    )
+                    monthly_rates = self._get_rates_and_availability_for_range(
+                        first_day, last_day, api_call, prop
+                    )
+                    end_date = last_day
+                    all_rates.extend(monthly_rates)
+                    time.sleep(2)
 
             PMSDataResponse.objects.create(
                 pms=prop.pms,
@@ -265,7 +285,7 @@ class FnsPropertyHelper(BasePropertyHelper):
         return data
 
     def _get_reservations_for_range(
-            self, start_date, end_date, api_call, prop: Property
+        self, start_date, end_date, api_call, prop: Property
     ):
         response = api_call._get(
             url="/getHotelBookingsJSON.php",
@@ -281,7 +301,7 @@ class FnsPropertyHelper(BasePropertyHelper):
         return self._parse_reservations(response, start_date, end_date, prop)
 
     def _get_rates_and_availability_for_range(
-            self, start_date, end_date, api_call, prop: Property
+        self, start_date, end_date, api_call, prop: Property
     ):
         response = api_call._get(
             url="/getRates.php",
@@ -297,7 +317,7 @@ class FnsPropertyHelper(BasePropertyHelper):
         return self._parse_rates_and_availability(response)
 
     def _parse_reservations(
-            self, response, start_date: datetime, end_date: datetime, prop: Property
+        self, response, start_date: datetime, end_date: datetime, prop: Property
     ) -> List[Dict[str, Union[str, Dict]]]:
         reservations = []
 
@@ -330,7 +350,7 @@ class FnsPropertyHelper(BasePropertyHelper):
                     "modification_date": (
                         booking.get("modification_date")
                         if booking.get("modification_date")
-                           and "0000" not in booking.get("modification_date")
+                        and "0000" not in booking.get("modification_date")
                         else None
                     ),
                     "currency": booking.get("currency"),
@@ -429,16 +449,16 @@ class FnsPropertyHelper(BasePropertyHelper):
             result = {}
 
             # Iterate through the XML structure
-            for revenue in root.findall('hotelRevenues/revenue'):
-                for th in revenue.findall('th'):
-                    roomTypeID = th.find('roomTypeID').text
-                    date = th.find('day').text
+            for revenue in root.findall("hotelRevenues/revenue"):
+                for th in revenue.findall("th"):
+                    roomTypeID = th.find("roomTypeID").text
+                    date = th.find("day").text
                     # Convert the date to YYYY-MM-DD format
-                    formatted_date = "-".join(reversed(date.split('/')))
+                    formatted_date = "-".join(reversed(date.split("/")))
 
                     # Compute the value as totalRooms - occupancy
-                    totalRooms = int(th.find('totalRooms').text)
-                    occupancy = int(th.find('occupancy').text)
+                    totalRooms = int(th.find("totalRooms").text)
+                    occupancy = int(th.find("occupancy").text)
                     value = totalRooms - occupancy
 
                     # Update the dictionary
@@ -446,7 +466,7 @@ class FnsPropertyHelper(BasePropertyHelper):
                         result[roomTypeID] = {}
                     result[roomTypeID][formatted_date] = value
 
-            result['total'] = result.pop('0')
+            result["total"] = result.pop("0")
             return result
         except Exception as e:
             print(f"Error parsing availability XML: {e}")
@@ -466,7 +486,7 @@ class FnsPropertyHelper(BasePropertyHelper):
                 "room_type": day.findtext("roomType"),
                 "availability": int(day.findtext("availability")),
                 "date": day.findtext("date"),
-                "rates": []
+                "rates": [],
             }
 
             rates = day.find("rates")
@@ -477,16 +497,18 @@ class FnsPropertyHelper(BasePropertyHelper):
                 rate_data = {
                     "rate_id": rate.findtext("rate_id"),
                     "prices": [],
-                    "restrictions": {}
+                    "restrictions": {},
                 }
 
                 prices = rate.find("prices")
                 if prices is not None:
                     for p in prices.findall("priceOccupancy"):
-                        rate_data["prices"].append({
-                            "occupancy": int(p.findtext("occupancy")),
-                            "price": float(p.findtext("price"))
-                        })
+                        rate_data["prices"].append(
+                            {
+                                "occupancy": int(p.findtext("occupancy")),
+                                "price": float(p.findtext("price")),
+                            }
+                        )
 
                 restrictions = rate.find("restrictions")
                 if restrictions is not None:

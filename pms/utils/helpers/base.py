@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List
+from datetime import date
+from typing import List, Optional
 
 from properties.models import Property
 
@@ -31,12 +32,19 @@ class BasePropertyHelper(ABC):
         ...
 
     @abstractmethod
-    def download_reservations(self, prop: Property) -> List[dict]:
+    def download_reservations(
+        self, prop: Property, checkin: Optional[date] = None
+    ) -> List[dict]:
         """Download reservations from the PMS."""
         ...
 
     @abstractmethod
-    def download_rates_and_availability(self, prop: Property) -> List[dict]:
+    def download_rates_and_availability(
+        self,
+        prop: Property,
+        checkin: Optional[date] = None,
+        checkout: Optional[date] = None,
+    ) -> List[dict]:
         """Download rates and availability from the PMS."""
         ...
 

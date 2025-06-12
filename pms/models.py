@@ -27,7 +27,9 @@ class PMSDataResponse(models.Model):
         PMS, on_delete=models.CASCADE, related_name="pms_data_responses"
     )
     property = models.ForeignKey(
-        'properties.Property', on_delete=models.CASCADE, related_name="pms_data_responses"
+        "properties.Property",
+        on_delete=models.CASCADE,
+        related_name="pms_data_responses",
     )
     function_name = models.CharField(max_length=255)
     response_data = models.JSONField(verbose_name="Response Data")
@@ -44,4 +46,3 @@ class PMSDataResponse(models.Model):
 
     def __str__(self):
         return f"PMS Data Response for {self.pms.name} at {self.created_at}"
-

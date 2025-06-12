@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -29,7 +31,11 @@ SECRET_KEY = "django-insecure-(y4si_+axe6qoukrek*a=nfzc97!6d&m6p^&re&)v*m4c)b@3n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["dozzzebe-production.up.railway.app", "web.motor-reservas.orb.local", "localhost"]
+ALLOWED_HOSTS = [
+    "dozzzebe-production.up.railway.app",
+    "web.motor-reservas.orb.local",
+    "localhost",
+]
 
 # Application definition
 
@@ -45,7 +51,7 @@ INSTALLED_APPS = [
     "storages",
     "django.contrib.gis",
     "corsheaders",
-    "django_celery_beat"
+    "django_celery_beat",
 ]
 
 LOCAL_APPS = [
@@ -218,4 +224,4 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"

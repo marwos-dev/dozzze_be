@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List, Optional
 
-from ninja import Schema
+from ninja import Field, Schema
 
 from utils import generate_presigned_url
 
@@ -19,8 +19,8 @@ class Price(Schema):
 
 
 class Rate(Schema):
-    rate_external_id: Optional[str] = None
-    availability: int  # ForeignKey to Availability, represented as an int for simplicity
+    # rate_external_id: Optional[str] = None
+    # availability: int  # ForeignKey to Availability, represented as an int for simplicity
     prices: List[Price]
     restriction: Optional[dict] = None  # JSONField for restrictions
 
@@ -34,9 +34,7 @@ class AvailabilityOut(Schema):
 class RoomTypeOut(Schema):
     id: int
     name: str
-    external_id: str
     description: Optional[str] = None
-    # availability: List[AvailabilityOut]
 
 
 class RoomOut(Schema):
@@ -136,3 +134,17 @@ class PropertyOut(Schema):
         return list(room_types) if room_types else None
 
 
+class RoomAvailability(Schema):
+    date: date
+    room_type: str
+    availability: int
+    rates: List[Rate]
+    property_id: int
+
+
+class AvailabilityRequest(Schema):
+    property_id: Optional[int] = Field(default=None)
+    check_in: date
+    check_out: date
+    guests: Optional[int] = Field(default=2)
+    room_type: Optional[int] = Field(default=None)

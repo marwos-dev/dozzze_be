@@ -1,3 +1,5 @@
+import json
+from datetime import timedelta
 from typing import List, Optional
 
 from django.conf import settings
@@ -5,8 +7,11 @@ from ninja import Query, Router
 from ninja.errors import HttpError
 from ninja.security import APIKeyHeader
 
-from .models import Property, Room
-from .schemas import PropertyOut, RoomOut
+from pms.utils.property_helper_factory import PMSHelperFactory
+
+from .models import Availability, Property, Room
+from .schemas import AvailabilityRequest, PropertyOut, RoomAvailability, RoomOut
+from .sync_service import SyncService
 
 
 class FrontendTokenAuth(APIKeyHeader):
@@ -31,6 +36,69 @@ def available_properties(
     if zona:
         propiedades = propiedades.filter(zone_id=zona)
     return propiedades
+
+
+@router.post("/availability/", response=List[RoomAvailability])
+def get_availability(request, data: AvailabilityRequest):
+    if not data.check_in:
+        raise HttpError(403, "Invalid check-in date")
+
+    if data.check_in > data.check_out:
+        raise HttpError(403, "Check-in date cannot be after check-out date")
+
+    property_obj = data.property_id
+    if property_obj:
+        property_obj = Property.objects.filter(id=data.property_id, active=True).first()
+        if not property_obj:
+            raise HttpError(404, "Property not found")
+
+    helper = None
+    if property_obj:
+        helper = PMSHelperFactory().get_helper(property_obj)
+
+    # Paso 1: Verificar si hay datos disponibles en base de datos
+    existing_data = Availability.existing_for(
+        data.check_in, data.check_out, property_obj, data.room_type
+    )
+
+    # Paso 2: Verificar si faltan fechas
+    expected_dates = set(
+        data.check_in + timedelta(days=i)
+        for i in range((data.check_out - data.check_in).days)
+    )
+    existing_dates = set(a.date for a in existing_data)
+    missing_dates = expected_dates - existing_dates
+
+    if missing_dates or not existing_data:
+        # Si faltan fechas, sincronizamos
+        if property_obj and helper:
+            SyncService.sync_rates_and_availability(
+                property_obj, helper, checkin=data.check_in, checkout=data.check_out
+            )
+        # Vuelve a buscar con los datos frescos
+        existing_data = Availability.existing_for(
+            data.check_in, data.check_out, property_obj, room_type_id=data.room_type
+        )
+
+    # Paso 3: Armar la respuesta
+    response = []
+    for availability in existing_data:
+        try:
+            parsed_rates = json.loads(availability.rates)
+        except Exception:
+            raise HttpError(500, "Could not parse rates")
+
+        response.append(
+            RoomAvailability(
+                date=availability.date,
+                room_type=availability.room_type.name,
+                availability=availability.availability,
+                rates=parsed_rates,
+                property_id=availability.property_id,
+            )
+        )
+
+    return response
 
 
 @router.get("/{property_id}", response=PropertyOut)

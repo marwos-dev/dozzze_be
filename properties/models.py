@@ -115,9 +115,10 @@ class RoomType(models.Model):
     def __str__(self):
         return self.name
 
-
     def photos_of_room_type(self):
-        return self.rooms.filter(images__isnull=False).values_list('images__image', flat=True)
+        return self.rooms.filter(images__isnull=False).values_list(
+            "images__image", flat=True
+        )
 
 
 class Room(models.Model):
@@ -158,16 +159,16 @@ class Room(models.Model):
     @classmethod
     def get_type_room_from_name(cls, name) -> Optional[str]:
         if (
-                "habitacion" in name.lower()
-                or "room" in name.lower()
-                or "cuarto" in name.lower()
+            "habitacion" in name.lower()
+            or "room" in name.lower()
+            or "cuarto" in name.lower()
         ):
             return cls.ROOM
 
         if (
-                "apartamento" in name.lower()
-                or "apartament" in name.lower()
-                or "departamento" in name.lower()
+            "apartamento" in name.lower()
+            or "apartament" in name.lower()
+            or "departamento" in name.lower()
         ):
             return cls.APARTMENT
 
@@ -339,4 +340,18 @@ class Availability(models.Model):
         unique_together = ("property", "room_type", "date")
         ordering = ["-date"]
 
+    @classmethod
+    def existing_for(
+        cls,
+        start_date: date,
+        end_date: date,
+        property_obj: Optional[Property] = None,
+        room_type_id=None,
+    ):
+        qs = cls.objects.filter(date__range=(start_date, end_date))
+        if property_obj:
+            qs = qs.filter(property=property_obj)
 
+        if room_type_id:
+            qs = qs.filter(room_type_id=room_type_id)
+        return qs
