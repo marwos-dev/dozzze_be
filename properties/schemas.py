@@ -62,6 +62,10 @@ class RoomOut(Schema):
             else []
         )
 
+    @staticmethod
+    def resolve_type(obj):
+        return obj.type.name if obj.type else None
+
 
 class TermsAndConditionsOut(Schema):
     condition_of_confirmation: str

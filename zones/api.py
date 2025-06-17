@@ -1,8 +1,10 @@
 from typing import List
 
 from ninja import Router
+from ninja.errors import HttpError
 from ninja.responses import Response
 
+from utils import ErrorSchema
 from .models import Zone
 from .schemas import ZoneOut
 
@@ -32,7 +34,7 @@ def zones(request):
     return Zone.objects.all()
 
 
-@router.get("/{zone_id}/", response={200: ZoneOut})
+@router.get("/{zone_id}/", response={200: ZoneOut, 404: ErrorSchema})
 def zone(request, zone_id):
     """
     This endpoint fetches a zone by ID.
@@ -41,4 +43,7 @@ def zone(request, zone_id):
     * 200 OK - Returns the zone details
     * 404 Not Found - Zone not found
     """
-    return Zone.objects.get(id=zone_id)
+    try:
+        return Zone.objects.get(id=zone_id)
+    except Zone.DoesNotExist:
+        raise HttpError(404, "Zone not found")

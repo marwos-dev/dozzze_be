@@ -19,6 +19,21 @@ class ZoneAdmin(GISModelAdmin):
     default_lon = -3.7038
     default_lat = 40.4168
     default_zoom = 6
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "name",
+                    "description",
+                    "area",
+                    "active",
+                    "cover_image",
+                )
+            },
+        ),
+    )
+    readonly_fields = ("created_at",)
 
     class Media:
         css = {"all": ("css/map_solution.css",)}

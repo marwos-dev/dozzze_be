@@ -4,14 +4,18 @@ from datetime import datetime
 
 from reservations.models import Reservation, ReservationRoom
 from utils import extract_pax
-from .models import Availability, RoomType
-from .models import Property, Room
+
+from .models import Availability, Property, Room, RoomType
 
 
 class SyncService:
     @classmethod
-    def sync_rates_and_availability(cls, prop: Property, helper, checkin=None, checkout=None):
-        rates_and_availability = helper.download_rates_and_availability(prop, checkin=checkin, checkout=checkout)
+    def sync_rates_and_availability(
+        cls, prop: Property, helper, checkin=None, checkout=None
+    ):
+        rates_and_availability = helper.download_rates_and_availability(
+            prop, checkin=checkin, checkout=checkout
+        )
         if not rates_and_availability:
             return False
 
@@ -19,7 +23,9 @@ class SyncService:
         availabilities_to_update = []
 
         for rate_data in rates_and_availability:
-            room_type = RoomType.objects.filter(external_id=rate_data["room_type"]).first()
+            room_type = RoomType.objects.filter(
+                external_id=rate_data["room_type"]
+            ).first()
             if not room_type:
                 print(f"Room type not found: {rate_data['room_type']}")
                 continue
@@ -36,7 +42,10 @@ class SyncService:
             availability_count = rate_data["availability"]
 
             if availability:
-                if availability.rates == rates_json and availability.availability == availability_count:
+                if (
+                    availability.rates == rates_json
+                    and availability.availability == availability_count
+                ):
                     continue
                 availability.rates = rates_json
                 availability.availability = availability_count
@@ -53,7 +62,9 @@ class SyncService:
                 )
 
         if availabilities_to_update:
-            Availability.objects.bulk_update(availabilities_to_update, ["rates", "availability"])
+            Availability.objects.bulk_update(
+                availabilities_to_update, ["rates", "availability"]
+            )
 
         if availabilities_to_create:
             Availability.objects.bulk_create(availabilities_to_create)
