@@ -68,8 +68,10 @@ def get_availability(request, data: AvailabilityRequest):
     existing_data = Availability.existing_for(
         data.check_in, data.check_out, property_obj, data.room_type
     )
+    existing_dates = set(a.date for a in existing_data)
+    missing_dates = set(date_range) - existing_dates
 
-    if not existing_data:
+    if not existing_data or missing_dates:
         if property_obj:
             helper = PMSHelperFactory().get_helper(property_obj)
             SyncService.sync_rates_and_availability(
@@ -112,6 +114,16 @@ def get_availability(request, data: AvailabilityRequest):
             except Exception:
                 raise HttpError(500, f"Could not parse rates for date {date}")
 
+            rooms_availability.append(
+                RoomAvailability(
+                    date=availability.date,
+                    room_type=room_type_name,
+                    availability=availability.availability,
+                    rates=parsed_rates,  # solo para visual
+                    property_id=availability.property_id,
+                )
+            )
+
             rates_cache_by_date[date] = parsed_rates  # solo para mostrar una en rooms
 
             for i, rate in enumerate(parsed_rates):
@@ -135,18 +147,10 @@ def get_availability(request, data: AvailabilityRequest):
             continue
 
         # Agregar una sola room para mostrar
-        any_availability = next(iter(availability_by_date.values()))
-        rooms_availability.append(
-            RoomAvailability(
-                date=data.check_in,
-                room_type=room_type_name,
-                availability=min(a.availability for a in availabilities),
-                rates=rates_cache_by_date[date_range[0]],  # solo para visual
-                property_id=any_availability.property_id,
-            )
-        )
 
-        total_price_per_room_type[room_type_name] = valid_totals
+        total_price_per_room_type[f"{room_type_name}-guests:{data.guests}"] = (
+            valid_totals
+        )
 
     if not rooms_availability:
         raise HttpError(404, "No availability for the selected dates")

@@ -4,6 +4,7 @@ from ninja import Router
 from ninja.responses import Response
 
 from utils import ErrorSchema
+
 from .models import Zone
 from .schemas import ZoneOut
 
