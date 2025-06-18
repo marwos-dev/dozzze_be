@@ -1,7 +1,6 @@
 from typing import List
 
 from ninja import Router
-from ninja.errors import HttpError
 from ninja.responses import Response
 
 from utils import ErrorSchema
@@ -43,7 +42,9 @@ def zone(request, zone_id):
     * 200 OK - Returns the zone details
     * 404 Not Found - Zone not found
     """
-    try:
-        return Zone.objects.get(id=zone_id)
-    except Zone.DoesNotExist:
-        raise HttpError(404, "Zone not found")
+    # try:
+    #     return Zone.objects.get(id=zone_id)
+    # except Zone.DoesNotExist:
+    #     raise HttpError(404, "Zone not found")
+    #
+    return Zone.objects.get(id=zone_id)

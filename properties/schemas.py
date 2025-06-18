@@ -144,6 +144,7 @@ class RoomAvailability(Schema):
     availability: int
     rates: List[Rate]
     property_id: int
+    total_price: Optional[float] = None
 
 
 class AvailabilityRequest(Schema):
@@ -152,3 +153,8 @@ class AvailabilityRequest(Schema):
     check_out: date
     guests: Optional[int] = Field(default=2)
     room_type: Optional[int] = Field(default=None)
+
+
+class AvailabilityResponse(Schema):
+    rooms: List[RoomAvailability]
+    total_price_per_room_type: Optional[dict] = None

@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from datetime import timedelta
 from typing import List, Optional
 
@@ -8,9 +9,16 @@ from ninja.errors import HttpError
 from ninja.security import APIKeyHeader
 
 from pms.utils.property_helper_factory import PMSHelperFactory
+from utils import ErrorSchema
 
 from .models import Availability, Property, Room
-from .schemas import AvailabilityRequest, PropertyOut, RoomAvailability, RoomOut
+from .schemas import (
+    AvailabilityRequest,
+    AvailabilityResponse,
+    PropertyOut,
+    RoomAvailability,
+    RoomOut,
+)
 from .sync_service import SyncService
 
 
@@ -38,7 +46,7 @@ def available_properties(
     return propiedades
 
 
-@router.post("/availability/", response=List[RoomAvailability])
+@router.post("/availability/", response={200: AvailabilityResponse, 404: ErrorSchema})
 def get_availability(request, data: AvailabilityRequest):
     if not data.check_in:
         raise HttpError(403, "Invalid check-in date")
@@ -46,59 +54,107 @@ def get_availability(request, data: AvailabilityRequest):
     if data.check_in > data.check_out:
         raise HttpError(403, "Check-in date cannot be after check-out date")
 
-    property_obj = data.property_id
-    if property_obj:
+    property_obj = None
+    if data.property_id:
         property_obj = Property.objects.filter(id=data.property_id, active=True).first()
         if not property_obj:
             raise HttpError(404, "Property not found")
 
-    helper = None
-    if property_obj:
-        helper = PMSHelperFactory().get_helper(property_obj)
+    date_range = [
+        data.check_in + timedelta(days=i)
+        for i in range((data.check_out - data.check_in).days)
+    ]
 
-    # Paso 1: Verificar si hay datos disponibles en base de datos
     existing_data = Availability.existing_for(
         data.check_in, data.check_out, property_obj, data.room_type
     )
 
-    # Paso 2: Verificar si faltan fechas
-    expected_dates = set(
-        data.check_in + timedelta(days=i)
-        for i in range((data.check_out - data.check_in).days)
-    )
-    existing_dates = set(a.date for a in existing_data)
-    missing_dates = expected_dates - existing_dates
-
-    if missing_dates or not existing_data:
-        # Si faltan fechas, sincronizamos
-        if property_obj and helper:
+    if not existing_data:
+        if property_obj:
+            helper = PMSHelperFactory().get_helper(property_obj)
             SyncService.sync_rates_and_availability(
                 property_obj, helper, checkin=data.check_in, checkout=data.check_out
             )
-        # Vuelve a buscar con los datos frescos
+        else:
+            for prop in Property.objects.filter(active=True):
+                helper = PMSHelperFactory().get_helper(prop)
+                SyncService.sync_rates_and_availability(
+                    prop, helper, checkin=data.check_in, checkout=data.check_out
+                )
+
         existing_data = Availability.existing_for(
             data.check_in, data.check_out, property_obj, room_type_id=data.room_type
         )
 
-    # Paso 3: Armar la respuesta
-    response = []
+    grouped_by_room_type = defaultdict(list)
     for availability in existing_data:
-        try:
-            parsed_rates = json.loads(availability.rates)
-        except Exception:
-            raise HttpError(500, "Could not parse rates")
+        grouped_by_room_type[availability.room_type.name].append(availability)
 
-        response.append(
+    rooms_availability = []
+    total_price_per_room_type = {}
+
+    for room_type_name, availabilities in grouped_by_room_type.items():
+        availability_by_date = {a.date: a for a in availabilities}
+        if not all(
+            d in availability_by_date and availability_by_date[d].availability > 0
+            for d in date_range
+        ):
+            continue  # alguna fecha no tiene disponibilidad
+
+        rate_totals = defaultdict(float)
+        rate_valid = defaultdict(lambda: True)
+        rates_cache_by_date = {}
+
+        for date in date_range:
+            availability = availability_by_date[date]
+            try:
+                parsed_rates = json.loads(availability.rates)
+            except Exception:
+                raise HttpError(500, f"Could not parse rates for date {date}")
+
+            rates_cache_by_date[date] = parsed_rates  # solo para mostrar una en rooms
+
+            for i, rate in enumerate(parsed_rates):
+                found = False
+                for price in rate.get("prices", []):
+                    if price.get("occupancy") == data.guests:
+                        rate_totals[i] += price["price"]
+                        found = True
+                        break
+                if not found:
+                    rate_valid[i] = False  # una fecha sin precio invalida el rate
+
+        # Filtrar solo los válidos
+        valid_totals = [
+            {"rate_index": i, "total_price": round(rate_totals[i], 2)}
+            for i in rate_totals
+            if rate_valid[i]
+        ]
+
+        if not valid_totals:
+            continue
+
+        # Agregar una sola room para mostrar
+        any_availability = next(iter(availability_by_date.values()))
+        rooms_availability.append(
             RoomAvailability(
-                date=availability.date,
-                room_type=availability.room_type.name,
-                availability=availability.availability,
-                rates=parsed_rates,
-                property_id=availability.property_id,
+                date=data.check_in,
+                room_type=room_type_name,
+                availability=min(a.availability for a in availabilities),
+                rates=rates_cache_by_date[date_range[0]],  # solo para visual
+                property_id=any_availability.property_id,
             )
         )
 
-    return response
+        total_price_per_room_type[room_type_name] = valid_totals
+
+    if not rooms_availability:
+        raise HttpError(404, "No availability for the selected dates")
+
+    return {
+        "rooms": rooms_availability,
+        "total_price_per_room_type": total_price_per_room_type,
+    }
 
 
 @router.get("/{property_id}", response=PropertyOut)
