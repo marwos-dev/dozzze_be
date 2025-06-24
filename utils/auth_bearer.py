@@ -1,12 +1,5 @@
-from ninja import Router
 from ninja.security import HttpBearer
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.models import User
-from pydantic import BaseModel, EmailStr
-from typing import Optional
-from django.contrib.auth import authenticate
-from django.http import HttpRequest
-from ninja.errors import HttpError
+
 
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
