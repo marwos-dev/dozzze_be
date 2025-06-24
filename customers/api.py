@@ -1,0 +1,88 @@
+from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
+from ninja import Router
+from ninja.errors import HttpError
+from ninja.throttling import UserRateThrottle
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+
+from customers.schemas import LoginIn, ProfileOut, RefreshTokenIn, TokenOut
+from utils import ErrorSchema
+from utils.auth_bearer import AuthBearer
+
+UserModel = get_user_model()
+customer_router = Router(tags=["customers"])
+
+
+@customer_router.post("/signup", response={200: ProfileOut, 400: ErrorSchema}, throttle=[UserRateThrottle('5/m')])
+def signup(request, data: LoginIn):
+    """
+    Endpoint for user signup.
+
+    Response codes:
+    * 200 OK - Returns the created user profile
+    * 400 Bad Request - Error during signup
+    """
+    if UserModel.objects.filter(email=data.email).exists():
+        raise HttpError(400, "Email already exists")
+    user = UserModel.objects.create_user(
+        username=f"user-{data.email}",
+        email=data["email"],
+        password=data["password"]
+    )
+    return ProfileOut(
+        email=user.email,
+    )
+
+
+@customer_router.post("/login", response={200: TokenOut, 400: ErrorSchema}, throttle=[UserRateThrottle('5/m')])
+def login(request, data: LoginIn):
+    try:
+        _user = UserModel.objects.get(email=data.email)
+        user = authenticate(
+            request,
+            username=_user.get_username(),
+            password=data.password
+        )
+        if not user:
+            raise HttpError(401, "Credenciales inválidas")
+
+        refresh = RefreshToken.for_user(user)
+        return TokenOut(
+            access=str(refresh.access_token),
+            refresh=str(refresh)
+        )
+    except UserModel.DoesNotExist:
+        raise HttpError(400, "User does not exist")
+
+
+@customer_router.get("/profile", response={200: ProfileOut, 401: ErrorSchema}, auth=AuthBearer())
+def profile(request):
+    """
+    Endpoint to get the authenticated user's profile.
+
+    Response codes:
+    * 200 OK - Returns the user's profile
+    * 401 Unauthorized - User not authenticated
+    """
+    user = request.user
+    if not user.is_authenticated:
+        raise HttpError(401, "User not authenticated")
+
+    return ProfileOut(
+        email=user.email,
+        username=user.username
+    )
+
+
+@customer_router.post("/refresh-token", response=TokenOut)
+def refresh_token(request, data: RefreshTokenIn):
+    try:
+        refresh = RefreshToken(data.refresh)
+        access_token = str(refresh.access_token)
+
+        # Si usás rotación de refresh, generás uno nuevo:
+        new_refresh = str(refresh)  # si no hay rotación, podés devolver el mismo
+
+        return TokenOut(access=access_token, refresh=new_refresh)
+    except TokenError:
+        raise HttpError(401, "Refresh token inválido o expirado")

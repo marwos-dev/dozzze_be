@@ -19,20 +19,30 @@ from django.contrib import admin
 from django.urls import path
 from ninja import NinjaAPI
 
+from customers.api import customer_router
 from properties.api import router as properties_router
+from utils.security import PublicAPIKey
 from zones.api import router as zones_router
+
+public_auth = PublicAPIKey()
 
 api = NinjaAPI()
 
 api.add_router(
+    "/customers/",
+    customer_router,
+    auth=public_auth,
+)
+api.add_router(
     "/properties/",
     properties_router,
+    auth=public_auth,
 )
 api.add_router(
     "/zones/",
     zones_router,
+    auth=public_auth,
 )
-
 
 urlpatterns = [
     path("admin/", admin.site.urls),

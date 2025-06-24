@@ -3,10 +3,9 @@ from collections import defaultdict
 from datetime import timedelta
 from typing import List, Optional
 
-from django.conf import settings
 from ninja import Query, Router
 from ninja.errors import HttpError
-from ninja.security import APIKeyHeader
+from ninja.throttling import UserRateThrottle
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from utils import ErrorSchema
@@ -21,20 +20,14 @@ from .schemas import (
 )
 from .sync_service import SyncService
 
-
-class FrontendTokenAuth(APIKeyHeader):
-    param_name = "X-API-KEY"  # o "Authorization"
-
-    def authenticate(self, request, key):
-        if key == settings.MY_FRONTEND_SECRET_TOKEN:
-            return key
-        raise HttpError(401, "Invalid API key")
-
-
 router = Router(tags=["properties"])
 
 
-@router.get("/", response={200: List[PropertyOut], 400: str})
+@router.get(
+    "/",
+    response={200: List[PropertyOut], 400: str},
+    throttle=[UserRateThrottle("10/m")],
+)
 def available_properties(
     request,
     zona: Optional[int] = Query(None),
@@ -46,7 +39,11 @@ def available_properties(
     return propiedades
 
 
-@router.post("/availability/", response={200: AvailabilityResponse, 404: ErrorSchema})
+@router.post(
+    "/availability/",
+    response={200: AvailabilityResponse, 404: ErrorSchema},
+    throttle=[UserRateThrottle("10/m")],
+)
 def get_availability(request, data: AvailabilityRequest):
     if not data.check_in:
         raise HttpError(403, "Invalid check-in date")
@@ -112,7 +109,7 @@ def get_availability(request, data: AvailabilityRequest):
             try:
                 parsed_rates = json.loads(availability.rates)
             except Exception:
-                raise HttpError(500, f"Could not parse rates for date {date}")
+                raise HttpError(400, f"Could not parse rates for date {date}")
 
             rooms_availability.append(
                 RoomAvailability(
@@ -134,7 +131,7 @@ def get_availability(request, data: AvailabilityRequest):
                         found = True
                         break
                 if not found:
-                    rate_valid[i] = False  # una fecha sin precio invalida el rate
+                    raise HttpError(400, f"No price found for {data.guests} guests")
 
         # Filtrar solo los válidos
         valid_totals = [
@@ -161,7 +158,7 @@ def get_availability(request, data: AvailabilityRequest):
     }
 
 
-@router.get("/{property_id}", response=PropertyOut)
+@router.get("/{property_id}", response=PropertyOut, throttle=[UserRateThrottle("1/m")])
 def get_property(request, property_id: int):
     try:
         _property = Property.objects.get(id=property_id)
@@ -170,7 +167,9 @@ def get_property(request, property_id: int):
         return {"error": "Property not found"}
 
 
-@router.get("/{property_id}/rooms", response=List[RoomOut])
+@router.get(
+    "/{property_id}/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")]
+)
 def get_property_rooms(request, property_id: int):
     try:
         _property = Property.objects.get(id=property_id)
@@ -179,7 +178,7 @@ def get_property_rooms(request, property_id: int):
         raise HttpError(404, "Property not found")
 
 
-@router.get("/rooms/{room_id}", response=RoomOut)
+@router.get("/rooms/{room_id}", response=RoomOut, throttle=[UserRateThrottle("10/m")])
 def get_room(request, room_id: int):
     try:
         room = Room.objects.get(id=room_id)
@@ -188,7 +187,7 @@ def get_room(request, room_id: int):
         raise HttpError(404, "Room not found")
 
 
-@router.get("/rooms", response=List[RoomOut])
+@router.get("/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")])
 def get_rooms(
     request,
     zone_id: Optional[int] = Query(),

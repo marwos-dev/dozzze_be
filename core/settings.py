@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -59,6 +60,7 @@ LOCAL_APPS = [
     "reservations",
     "zones",
     "pms",
+    "customers",
 ]
 
 INSTALLED_APPS += LOCAL_APPS
@@ -109,7 +111,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.getenv("DB_NAME", "mtr"),
+        "NAME": os.getenv("DB_NAME", "mtr2"),
         "USER": os.getenv("DB_USER", "marcosolmedo"),
         "PASSWORD": os.getenv("DB_PASSWORD", "40575526"),
         "HOST": os.getenv("DB_HOST", "localhost"),
@@ -225,3 +227,22 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:63
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
+PUBLIC_API_KEY = "clave-larga-y-unica"
+
+DEVELOPMENT = os.getenv("DEVELOPMENT", "False").lower() in ("true", "1", "yes")
