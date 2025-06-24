@@ -1,15 +1,24 @@
 from typing import Optional
 from uuid import uuid4
 
+from django.contrib.auth import get_user_model
 from django.contrib.gis.db import models as geomodels
 from django.db import models
 from storages.backends.s3boto3 import S3Boto3Storage
+
+UserModel = get_user_model()
 
 
 class Service(models.Model):
     name = models.CharField(max_length=255, verbose_name="Nombre")
     description = models.TextField(verbose_name="Descripción")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
+    property = models.ForeignKey(
+        "Property",
+        related_name="services",
+        on_delete=models.CASCADE,
+        verbose_name="Propiedad",
+    )
 
     class Meta:
         db_table = "services"
@@ -27,6 +36,12 @@ def property_cover_image_upload_path(instance, filename):
 
 
 class Property(models.Model):
+    owner = models.ForeignKey(
+        UserModel,
+        related_name="properties",
+        on_delete=models.CASCADE,
+        verbose_name="Propietario",
+    )
     name = models.CharField(max_length=255, verbose_name="Nombre")
     description = models.TextField(verbose_name="Descripcion")
     address = models.CharField(max_length=255, verbose_name="Dirección")
@@ -105,6 +120,13 @@ class RoomType(models.Model):
         max_length=255, null=True, blank=True, verbose_name="ID Externo"
     )
     description = models.TextField(blank=True, null=True, verbose_name="Descripción")
+    cover_image = models.ImageField(
+        upload_to=property_image_upload_path,
+        null=True,
+        blank=True,
+        verbose_name="Imagen de Portada",
+        storage=S3Boto3Storage(),
+    )
 
     class Meta:
         db_table = "room_types"
@@ -119,6 +141,29 @@ class RoomType(models.Model):
         return self.rooms.filter(images__isnull=False).values_list(
             "images__image", flat=True
         )
+
+
+class RoomTypeImage(models.Model):
+    room_type = models.ForeignKey(
+        RoomType,
+        related_name="images",
+        on_delete=models.CASCADE,
+        verbose_name="Tipo de Habitación",
+    )
+    image = models.ImageField(
+        upload_to=property_image_upload_path,
+        verbose_name="Imagen",
+        storage=S3Boto3Storage(),
+    )
+
+    class Meta:
+        db_table = "room_type_images"
+        verbose_name = "Imagen de Tipo de Habitación"
+        verbose_name_plural = "Imágenes de Tipos de Habitaciones"
+        ordering = ["-id"]
+
+    def __str__(self):
+        return f"Image of {self.room_type.name}"
 
 
 class Room(models.Model):
@@ -136,7 +181,6 @@ class Room(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     pax = models.PositiveIntegerField()
-    services = models.ManyToManyField(Service, blank=True)
     external_id = models.CharField(max_length=255, null=True, blank=True)
     external_room_type_id = models.CharField(max_length=255, null=True, blank=True)
     external_room_type_name = models.CharField(max_length=255, null=True, blank=True)

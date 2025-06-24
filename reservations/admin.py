@@ -14,3 +14,9 @@ class ReservationAdmin(admin.ModelAdmin):
         if not change:
             obj.user = request.user
         super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(user=request.user)

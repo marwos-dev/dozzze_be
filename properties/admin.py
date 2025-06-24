@@ -14,7 +14,7 @@ from properties.admin_utils.inlines import (
     RoomInline,
     TermsAndConditionsInline,
 )
-from properties.models import CommunicationMethod, Property, Room, Service
+from properties.models import CommunicationMethod, Property, Room, RoomType, Service
 
 from .sync_service import SyncService
 
@@ -38,6 +38,7 @@ class PropertyAdmin(GISModelAdmin):
         "cover_preview",
         "location",
     )
+    readonly_fields = ("owner",)
     # readonly_fields = ["recent_reservations"]
     pms_helper = PMSHelperFactory()
     # readonly_fields = ["reservations_table"]
@@ -67,6 +68,26 @@ class PropertyAdmin(GISModelAdmin):
             "default_zoom": 6,
         }
     }
+
+    def save_model(self, request, obj, form, change):
+        if not change or not obj.owner_id:
+            obj.owner = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        if request.user.is_staff:
+            return qs.filter(owner=request.user)
+        return qs.none()  # los consumidores nunca deben ver nada
+
+    def has_view_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if request.user.is_staff and obj and obj.owner == request.user:
+            return True
+        return False
 
     def cover_preview(self, obj):
         if obj.cover_image:
@@ -256,14 +277,51 @@ class PropertyAdmin(GISModelAdmin):
 class RoomAdmin(admin.ModelAdmin):
     inlines = [RoomImageInline]  # ReservationInline
     list_display = ("name", "property", "pax")
-    filter_horizontal = ("services",)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        if request.user.is_staff:
+            return qs.filter(property__owner=request.user)
+        return qs.none()
 
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ("name",)
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        if request.user.is_staff:
+            return qs.filter(property__owner=request.user)
+        return qs.none()
+
 
 @admin.register(CommunicationMethod)
 class CommunicationMethodAdmin(admin.ModelAdmin):
     list_display = ("name",)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        if request.user.is_staff:
+            return qs.filter(property__owner=request.user)
+        return qs.none()
+
+
+@admin.register(RoomType)
+class RoomTypeAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+    inlines = [RoomInline]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        if request.user.is_staff:
+            return qs.filter(rooms__property__owner=request.user)
+        return qs.none()

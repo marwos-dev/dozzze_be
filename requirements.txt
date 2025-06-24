@@ -28,3 +28,6 @@ celery==5.2.3
 redis==3.5.3
 
 python-dotenv~=1.1.0
+djangorestframework-simplejwt==5.5.0
+
+django-ratelimit~=4.1.0
