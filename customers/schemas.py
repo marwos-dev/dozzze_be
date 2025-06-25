@@ -20,8 +20,7 @@ class LoginIn(Schema):
 
 
 class ProfileOut(Schema):
-    username: str
-    email: EmailStr
+    email: str
 
 
 class ProfileUpdateIn(Schema):
