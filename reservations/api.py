@@ -6,6 +6,7 @@ from ninja.errors import HttpError
 
 from properties.models import Availability, Property, Room
 from utils import ErrorSchema, SuccessSchema
+
 from .models import Reservation, ReservationRoom
 from .schemas import ReservationSchema
 
@@ -13,10 +14,7 @@ router = Router(tags=["reservations"])
 
 
 @router.post("/", response={200: SuccessSchema, 400: ErrorSchema})
-def create_reservation(
-        request,
-        data: ReservationSchema
-):
+def create_reservation(request, data: ReservationSchema):
     try:
         check_in = data.check_in
         check_out = data.check_out
@@ -30,10 +28,13 @@ def create_reservation(
                 overlapping = Reservation.objects.filter(
                     room=room,
                     reservation__check_in=check_in,
-                    reservation__check_out=check_out
+                    reservation__check_out=check_out,
                 )
                 if overlapping.exists():
-                    raise HttpError(400, f"Room {room.name} is already reserved for the selected dates.")
+                    raise HttpError(
+                        400,
+                        f"Room {room.name} is already reserved for the selected dates.",
+                    )
 
             room_objs = room.objects.select_related("type").filter(id__in=room_ids)
             room_types_map = {}
@@ -49,7 +50,10 @@ def create_reservation(
                         property_id=property_id,
                     )
                     if availability.availability < len(rooms):
-                        raise HttpError(400, f"Not enough availability for room type {room_type_id} on {current_date}.")
+                        raise HttpError(
+                            400,
+                            f"Not enough availability for room type {room_type_id} on {current_date}.",
+                        )
 
                 current_date += timedelta(days=1)
 
@@ -107,4 +111,6 @@ def create_reservation(
     except Property.DoesNotExist:
         raise HttpError(400, "Property does not exist.")
     except Exception as e:
-        raise HttpError(400, f"An error occurred while creating the reservation: {str(e)}")
+        raise HttpError(
+            400, f"An error occurred while creating the reservation: {str(e)}"
+        )

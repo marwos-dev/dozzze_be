@@ -1,6 +1,8 @@
-from ninja import Schema
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
+from ninja import Schema
+
 
 class RoomReservationOut(Schema):
     id: int
@@ -41,7 +43,6 @@ class ReservationSchema(Schema):
 
 class ReservationOut(ReservationSchema):
     id: int
-
 
     @staticmethod
     def resolve_rooms(obj):

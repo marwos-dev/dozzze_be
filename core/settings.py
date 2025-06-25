@@ -242,7 +242,21 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+PUBLIC_API_KEY = os.getenv("PUBLIC_API_KEY", "clave-larga-y-unica")
 
-PUBLIC_API_KEY = "clave-larga-y-unica"
+DEVELOPMENT = os.getenv("DEVELOPMENT", "false").lower() in ("true", "1", "yes")
 
-DEVELOPMENT = os.getenv("DEVELOPMENT", "False").lower() in ("true", "1", "yes")
+# EMAIL
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if not DEVELOPMENT
+    else "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "marwos97@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "gyon atra pibn vhsc")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "marwos97@gmail.com")
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:8000")
