@@ -13,3 +13,4 @@ class ErrorSchema(Schema):
     @staticmethod
     def resolve_error_code(obj):
         return obj.status_code if hasattr(obj, "status_code") else 400
+

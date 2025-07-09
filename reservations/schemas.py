@@ -20,7 +20,7 @@ class ReservationSchema(Schema):
     channel: str
     pax_count: int
     currency: str
-    rooms: List[int]
+    room_type: str
     total_price: float
     check_in: datetime
     check_out: datetime
@@ -41,9 +41,12 @@ class ReservationSchema(Schema):
     pay_on_arrival: Optional[float] = None
 
 
-class ReservationOut(ReservationSchema):
-    id: int
+class RedsysSchemaOut(Schema):
+    endpoint: str
+    Ds_SignatureVersion: str
+    Ds_MerchantParameters: str
+    Ds_Signature: str
 
-    @staticmethod
-    def resolve_rooms(obj):
-        return obj.reservations.all()
+class ReservationOut(Schema):
+    success: bool
+    redsys_args: RedsysSchemaOut

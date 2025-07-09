@@ -21,6 +21,7 @@ from ninja import NinjaAPI
 
 from customers.api import customer_router
 from properties.api import router as properties_router
+from reservations.api import router as reservation_router
 from utils.security import PublicAPIKey
 from zones.api import router as zones_router
 
@@ -42,6 +43,12 @@ api.add_router(
     "/zones/",
     zones_router,
     auth=public_auth,
+)
+
+api.add_router(
+    '/reservations/',
+    reservation_router,
+    auth=None,
 )
 
 urlpatterns = [

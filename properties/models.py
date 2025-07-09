@@ -200,33 +200,6 @@ class Room(models.Model):
             check_in__lt=check_out, check_out__gt=check_in
         ).exists()
 
-    @classmethod
-    def get_type_room_from_name(cls, name) -> Optional[str]:
-        if (
-            "habitacion" in name.lower()
-            or "room" in name.lower()
-            or "cuarto" in name.lower()
-        ):
-            return cls.ROOM
-
-        if (
-            "apartamento" in name.lower()
-            or "apartament" in name.lower()
-            or "departamento" in name.lower()
-        ):
-            return cls.APARTMENT
-
-        if "estudio" in name.lower() or "studio" in name.lower():
-            return cls.STUDIO
-
-        for room_type in cls.ROOM_TYPES:
-            if room_type[1].lower() in name.lower():
-                return room_type[0]
-
-        print(f"Tipo de habitación desconocido para el nombre: {name}")
-        print("Por defecto, se asignará 'Room'.")
-        return cls.ROOM
-
 
 def room_image_upload_path(instance, filename):
     return f"properties/gallery/{uuid4()}-{filename}"

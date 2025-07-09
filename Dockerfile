@@ -1,9 +1,4 @@
-<<<<<<< Updated upstream
-# Usa una imagen base de Python 3.11 en Alpine
-FROM python:3.12.10-alpine3.22
-=======
 FROM python:3.11-alpine
->>>>>>> Stashed changes
 
 # Establece el directorio de trabajo
 WORKDIR /app
