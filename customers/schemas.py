@@ -12,7 +12,8 @@ class SignUpIn(Schema):
 class TokenOut(Schema):
     access: str
     refresh: str
-
+    email: EmailStr | None
+    first_name: str
 
 class LoginIn(Schema):
     email: EmailStr

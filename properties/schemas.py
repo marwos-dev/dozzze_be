@@ -35,6 +35,18 @@ class RoomTypeOut(Schema):
     id: int
     name: str
     description: Optional[str] = None
+    images: Optional[List[str]] = None
+
+    @staticmethod
+    def resolve_images(obj):
+        return (
+            [
+                generate_presigned_url(room_type_image.image.name)
+                for room_type_image in obj.images.all()
+            ]
+            if obj.images
+            else []
+        )
 
 
 class RoomOut(Schema):

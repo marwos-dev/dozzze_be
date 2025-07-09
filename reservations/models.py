@@ -1,7 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from properties.models import Room
+from properties.models import Room, RoomType
 
 
 class ReservationRoom(models.Model):
@@ -9,6 +9,7 @@ class ReservationRoom(models.Model):
         "Reservation", on_delete=models.CASCADE, related_name="reservations"
     )
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, null=True, blank=True)
     price = models.FloatField(null=True, blank=True)
     guests = models.IntegerField(default=1, verbose_name="Cantidad de huéspedes")
 
@@ -59,6 +60,11 @@ class Reservation(models.Model):
         through="ReservationRoom",
         related_name="reservations",
     )
+    # room_type = models.ForeignKey(
+    #     "properties.RoomType",
+    #     on_delete=models.CASCADE,
+    #     related_name="reservations",
+    # )
     guest_corporate = models.CharField(
         max_length=255,
         verbose_name="Nombre de la empresa del huésped",
@@ -138,6 +144,18 @@ class Reservation(models.Model):
         verbose_name="Pay on arrival", null=True, blank=True
     )
 
+    # Campos para Redsys
+    payment_order = models.CharField(max_length=12, null=True, blank=True)
+    payment_amount = models.IntegerField(null=True, blank=True)  # En céntimos
+    payment_signature = models.CharField(max_length=256, null=True, blank=True)
+    payment_response = models.JSONField(null=True, blank=True)
+    payment_status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('paid', 'Paid'), ('failed', 'Failed')],
+        default='pending'
+    )
+    payment_date = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = "reservations"
         verbose_name = "Reserva"
@@ -146,3 +164,16 @@ class Reservation(models.Model):
     def __str__(self):
         rooms = ", ".join([room.name for room in self.rooms.all()])
         return f"Reserva en {rooms} del {self.check_in} al {self.check_out}"
+
+
+class PaymentNotificationLog(models.Model):
+    received_at = models.DateTimeField(auto_now_add=True)
+    raw_parameters = models.TextField()
+    signature = models.CharField(max_length=512)
+    order_id = models.CharField(max_length=64, db_index=True)
+    is_valid = models.BooleanField(default=False)
+    message = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "payment_notification_logs"
+        ordering = ["-received_at"]

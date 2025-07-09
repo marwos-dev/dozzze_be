@@ -190,6 +190,13 @@ class FnsPropertyHelper(BasePropertyHelper):
             dict: A dictionary with rates and availability.
         """
         try:
+            if not prop.pms_data:
+                print(
+                    f"Property {prop.name} does not have PMS data. "
+                    "Skipping download of rates and availability."
+                )
+                return []
+
             api_call = self.api_auth.init_call(
                 domain=prop.pms_data.base_url,
                 authorization={"Cookie": prop.pms_data.pms_token},

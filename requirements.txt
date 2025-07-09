@@ -31,3 +31,6 @@ python-dotenv~=1.1.0
 djangorestframework-simplejwt==5.5.0
 
 django-ratelimit~=4.1.0
+
+redsys~=0.2.7
+django-payments~=3.0.1

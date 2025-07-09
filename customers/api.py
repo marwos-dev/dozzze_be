@@ -72,7 +72,7 @@ def login(request, data: LoginIn):
             raise HttpError(401, "Credenciales inválidas")
 
         refresh = RefreshToken.for_user(user)
-        return TokenOut(access=str(refresh.access_token), refresh=str(refresh))
+        return TokenOut(access=str(refresh.access_token), refresh=str(refresh), email=user.email, first_name=user.first_name)
     except UserModel.DoesNotExist:
         raise HttpError(400, "User does not exist")
 
