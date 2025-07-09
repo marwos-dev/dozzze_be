@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
 from ninja import Schema
 
@@ -46,6 +46,7 @@ class RedsysSchemaOut(Schema):
     Ds_SignatureVersion: str
     Ds_MerchantParameters: str
     Ds_Signature: str
+
 
 class ReservationOut(Schema):
     success: bool

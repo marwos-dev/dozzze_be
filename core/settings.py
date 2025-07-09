@@ -32,7 +32,6 @@ SECRET_KEY = "django-insecure-(y4si_+axe6qoukrek*a=nfzc97!6d&m6p^&re&)v*m4c)b@3n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
 INSTALLED_APPS = [
     "jazzmin",
     "django.contrib.admin",
@@ -259,7 +258,6 @@ REDSYS_MERCHANT_CODE = int(os.getenv("REDSYS_MERCHANT_CODE", 263100000))
 REDSYS_TERMINAL = int(os.getenv("REDSYS_TERMINAL", 19))
 REDSYS_SECRET_KEY = os.getenv("REDSYS_SECRET_KEY", "sq7HjrUOBfKmC576ILgskD5srU870gJ7")
 REDSYS_URL = os.getenv("REDSYS_URL", "https://sis-t.redsys.es:25443/sis/realizarPago")
-
 
 ALLOWED_HOSTS = [
     "dozzzebe-production.up.railway.app",
