@@ -166,7 +166,6 @@ def redsys_notification(request):
         raise HttpError(400, f"An error occurred while processing notification: {str(e)}")
 
 
-
 @router.get("/my/", response=List[ReservationOut])
 def my_reservations(request):
     reservations = (
