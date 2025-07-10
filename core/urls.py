@@ -46,7 +46,7 @@ api.add_router(
 )
 
 api.add_router(
-    '/reservations/',
+    "/reservations/",
     reservation_router,
     auth=None,
 )

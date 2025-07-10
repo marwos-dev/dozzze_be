@@ -2,7 +2,6 @@ import json
 from datetime import timedelta
 from decimal import Decimal
 from typing import List
-from uuid import uuid4
 
 from django.db import transaction
 from django.utils.timezone import now
@@ -26,14 +25,14 @@ router = Router(tags=["reservations"])
 def create_reservation(request, reservations: List[ReservationSchema]):
     created_reservations = []
     total_amount = Decimal("0.00")
-    group_payment_order = str(uuid4()).replace("-", "")[:12].zfill(12)
+    group_payment_order = rs.generate_numeric_order()
 
     try:
         with transaction.atomic():
             for data in reservations:
                 check_in = data.check_in
                 check_out = data.check_out
-                room_type_id = data.room_type
+                room_type_id = data.room_type_id
                 property_id = data.property_id
                 current_date = check_in
 
@@ -124,7 +123,9 @@ def redsys_notification(request):
             )
             return {"error": "Missing parameters"}, 400
 
-        decoded, order_id = rs.process_notification(merchant_parameters, signature_received)
+        decoded, order_id = rs.process_notification(
+            merchant_parameters, signature_received
+        )
 
         PaymentNotificationLog.objects.create(
             raw_parameters=merchant_parameters,
@@ -163,13 +164,12 @@ def redsys_notification(request):
             is_valid=False,
             message=str(e),
         )
-        raise HttpError(400, f"An error occurred while processing notification: {str(e)}")
+        raise HttpError(
+            400, f"An error occurred while processing notification: {str(e)}"
+        )
 
 
 @router.get("/my/", response=List[ReservationOut])
 def my_reservations(request):
-    reservations = (
-        Reservation.objects.filter(user=request.user)
-        .order_by("-created_at")
-    )
+    reservations = Reservation.objects.filter(user=request.user).order_by("-created_at")
     return reservations

@@ -153,6 +153,7 @@ class PropertyOut(Schema):
 class RoomAvailability(Schema):
     date: date
     room_type: str
+    room_type_id: int
     availability: int
     rates: List[Rate]
     property_id: int

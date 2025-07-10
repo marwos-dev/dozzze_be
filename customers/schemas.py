@@ -15,6 +15,7 @@ class TokenOut(Schema):
     email: EmailStr | None
     first_name: str
 
+
 class LoginIn(Schema):
     email: EmailStr
     password: str

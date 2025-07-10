@@ -9,6 +9,7 @@ from ninja.throttling import UserRateThrottle
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from utils import ErrorSchema
+
 from .models import Availability, Property, Room
 from .schemas import (
     AvailabilityRequest,
@@ -28,8 +29,8 @@ router = Router(tags=["properties"])
     throttle=[UserRateThrottle("10/m")],
 )
 def available_properties(
-        request,
-        zona: Optional[int] = Query(None),
+    request,
+    zona: Optional[int] = Query(None),
 ):
     propiedades = Property.objects.filter(active=True)
 
@@ -94,8 +95,8 @@ def get_availability(request, data: AvailabilityRequest):
     for room_type_name, availabilities in grouped_by_room_type.items():
         availability_by_date = {a.date: a for a in availabilities}
         if not all(
-                d in availability_by_date and availability_by_date[d].availability > 0
-                for d in date_range
+            d in availability_by_date and availability_by_date[d].availability > 0
+            for d in date_range
         ):
             continue  # alguna fecha no tiene disponibilidad
 
@@ -114,6 +115,7 @@ def get_availability(request, data: AvailabilityRequest):
                 RoomAvailability(
                     date=availability.date,
                     room_type=room_type_name,
+                    room_type_id=availability.room_type_id,
                     availability=availability.availability,
                     rates=parsed_rates,  # solo para visual
                     property_id=availability.property_id,
@@ -188,9 +190,9 @@ def get_room(request, room_id: int):
 
 @router.get("/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")])
 def get_rooms(
-        request,
-        zone_id: Optional[int] = Query(),
-        property_id: Optional[int] = Query(None),
+    request,
+    zone_id: Optional[int] = Query(),
+    property_id: Optional[int] = Query(None),
 ):
     try:
         if zone_id:

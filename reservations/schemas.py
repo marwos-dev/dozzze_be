@@ -21,6 +21,7 @@ class ReservationSchema(Schema):
     pax_count: int
     currency: str
     room_type: str
+    room_type_id: int
     total_price: float
     check_in: datetime
     check_out: datetime

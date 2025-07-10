@@ -9,7 +9,9 @@ class ReservationRoom(models.Model):
         "Reservation", on_delete=models.CASCADE, related_name="reservations"
     )
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, null=True, blank=True)
+    room_type = models.ForeignKey(
+        RoomType, on_delete=models.CASCADE, null=True, blank=True
+    )
     price = models.FloatField(null=True, blank=True)
     guests = models.IntegerField(default=1, verbose_name="Cantidad de huéspedes")
 
@@ -151,8 +153,8 @@ class Reservation(models.Model):
     payment_response = models.JSONField(null=True, blank=True)
     payment_status = models.CharField(
         max_length=20,
-        choices=[('pending', 'Pending'), ('paid', 'Paid'), ('failed', 'Failed')],
-        default='pending'
+        choices=[("pending", "Pending"), ("paid", "Paid"), ("failed", "Failed")],
+        default="pending",
     )
     payment_date = models.DateTimeField(null=True, blank=True)
 
