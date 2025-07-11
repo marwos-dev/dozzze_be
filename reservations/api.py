@@ -14,8 +14,9 @@ from properties.models import Availability, Property
 from properties.sync_service import SyncService
 from utils import ErrorSchema, SuccessSchema
 from utils.redsys import RedsysService
-from .models import PaymentNotificationLog, Reservation
-from .schemas import ReservationOut, ReservationSchema
+
+from .models import PaymentNotificationLog, Reservation, ReservationRoom
+from .schemas import ReservationClientOut, ReservationOut, ReservationSchema
 
 rs = RedsysService()
 router = Router(tags=["reservations"])
@@ -93,6 +94,13 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                 total_amount += Decimal(data.total_price)
                 created_reservations.append(reservation)
 
+                ReservationRoom.objects.create(
+                    reservation=reservation,
+                    room_type_id=room_type_id,
+                    guests=data.pax_count,
+                    price=data.total_price,
+                )
+
         redsys_args = rs.prepare_payment_for_group(
             created_reservations, total_amount, request, group_payment_order
         )
@@ -169,7 +177,7 @@ def redsys_notification(request):
         )
 
 
-@router.get("/my/", response=List[ReservationOut])
+@router.get("/my", response=List[ReservationClientOut])
 def my_reservations(request):
     reservations = Reservation.objects.filter(user=request.user).order_by("-created_at")
     return reservations

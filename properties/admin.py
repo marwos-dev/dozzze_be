@@ -12,6 +12,7 @@ from properties.admin_utils.inlines import (
     PropertyImageInline,
     RoomImageInline,
     RoomInline,
+    RoomTypeImageInline,
     TermsAndConditionsInline,
 )
 from properties.models import CommunicationMethod, Property, Room, RoomType, Service
@@ -316,7 +317,7 @@ class CommunicationMethodAdmin(admin.ModelAdmin):
 @admin.register(RoomType)
 class RoomTypeAdmin(admin.ModelAdmin):
     list_display = ("name",)
-    inlines = [RoomInline]
+    inlines = [RoomInline, RoomTypeImageInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

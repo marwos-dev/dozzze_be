@@ -54,10 +54,7 @@ def signup(request, data: LoginIn):
     )
 
 
-@customer_router.post(
-    "/login",
-    response={200: TokenOut, 400: ErrorSchema},
-)
+@customer_router.post("/login", response={200: TokenOut, 400: ErrorSchema}, auth=None)
 def login(request, data: LoginIn):
     try:
         _user = UserModel.objects.get(email=data.email)
@@ -118,6 +115,7 @@ def refresh_token(request, data: RefreshTokenIn):
 @customer_router.get(
     "/activate-account",
     response={200: SuccessSchema, 400: ErrorSchema, 404: ErrorSchema},
+    auth=None,
 )
 def activate_account(request, token: str):
     try:

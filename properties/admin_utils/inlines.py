@@ -6,6 +6,7 @@ from properties.models import (
     PropertyImage,
     Room,
     RoomImage,
+    RoomTypeImage,
     TermsAndConditions,
 )
 
@@ -54,4 +55,9 @@ class PMSDataInline(admin.StackedInline):
 
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage
+    extra = 1
+
+
+class RoomTypeImageInline(admin.TabularInline):
+    model = RoomTypeImage
     extra = 1

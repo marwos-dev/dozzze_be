@@ -2,7 +2,7 @@
 import base64
 import json
 import random
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
 from redsys.client import RedirectClient
@@ -32,7 +32,8 @@ class RedsysService:
             "titular": reservation.guest_name or reservation.guest_corporate or "Guest",
             "product_description": f"Reserva #{reservation.id}",
             "merchant_url": f"{settings.BACKEND_URL}/api/reservations/redsys/notify/",
-            "url_ok": f"{settings.FRONTEND_URL}/reserve/ok?order={order}&amount={amount}&currency={reservation.currency}",
+            "url_ok": f"{settings.FRONTEND_URL}/reserve/ok?order={order}"
+            f"&amount={amount}&currency={reservation.currency}",
             "url_ko": f"{settings.FRONTEND_URL}/reserve/failed",
         }
 
@@ -77,14 +78,12 @@ class RedsysService:
             return False, f"Error al procesar la notificación: {str(e)}"
 
     def prepare_payment_for_group(
-            self, reservations, total_amount, request, group_payment_order
+        self, reservations, total_amount, request, group_payment_order
     ):
         titular = (
-                reservations[0].guest_name or reservations[0].guest_corporate or "Guest"
+            reservations[0].guest_name or reservations[0].guest_corporate or "Guest"
         )
-        property_currency = getattr(
-            reservations[0], "currency", "978"
-        )  # EUR por defecto
+        property_currency = getattr(reservations[0], "currency", EUR)  # EUR por defecto
 
         amount = Decimal(str(total_amount)).quantize(Decimal(".01"), ROUND_HALF_UP)
 
@@ -99,7 +98,8 @@ class RedsysService:
             "titular": titular,
             "product_description": f"Reservas múltiples #{group_payment_order}",
             "merchant_url": f"{settings.BACKEND_URL}/api/reservations/redsys/notify/",
-            "url_ok": f"{settings.FRONTEND_URL}/reserve/ok?order={group_payment_order}&amount={amount}&currency={property_currency}",
+            "url_ok": f"{settings.FRONTEND_URL}/reserve/ok?order={group_payment_order}"
+            f"&amount={amount}&currency={property_currency}",
             "url_ko": f"{settings.FRONTEND_URL}/reserve/failed",
         }
 

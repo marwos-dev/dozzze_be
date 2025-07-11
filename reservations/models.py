@@ -8,7 +8,7 @@ class ReservationRoom(models.Model):
     reservation = models.ForeignKey(
         "Reservation", on_delete=models.CASCADE, related_name="reservations"
     )
-    room = models.ForeignKey(Room, on_delete=models.CASCADE)
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     room_type = models.ForeignKey(
         RoomType, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -17,7 +17,7 @@ class ReservationRoom(models.Model):
 
     class Meta:
         db_table = "reservation_rooms"
-        unique_together = ("reservation", "room")
+        unique_together = ("reservation", "room_type")
         verbose_name = "Habitación reservada"
         verbose_name_plural = "Habitaciones reservadas"
 

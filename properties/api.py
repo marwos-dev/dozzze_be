@@ -42,7 +42,7 @@ def available_properties(
 @router.post(
     "/availability/",
     response={200: AvailabilityResponse, 404: ErrorSchema},
-    throttle=[UserRateThrottle("10/m")],
+    # throttle=[UserRateThrottle("10/m")],
 )
 def get_availability(request, data: AvailabilityRequest):
     if not data.check_in:
@@ -204,4 +204,7 @@ def get_rooms(
 
         return Room.objects.filter(property__in=properties)
     except Property.DoesNotExist:
-        raise HttpError(404, "Property not found")
+        raise HttpError(
+            404,
+            "Property not found",
+        )
