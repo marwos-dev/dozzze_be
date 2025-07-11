@@ -265,4 +265,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "d77f-79-116-14-191.ngrok-free.app",
+    "host.docker.internal:8000",
+    "host.docker.internal"
 ]
