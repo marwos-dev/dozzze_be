@@ -1,0 +1,27 @@
+name: deploy
+
+on: push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: adriano9102
+          password: change910211*
+      -
+        name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: adriano9102/hola:${{ github.sha }},adriano9102/hola:latest
