@@ -1,8 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from .models import PMS, PMSDataResponse
 from properties.models import Property
-from django.contrib.auth import get_user_model
+
+from .models import PMS, PMSDataResponse
 
 User = get_user_model()
 
@@ -30,4 +31,3 @@ class PMSTest(TestCase):
             response_data={"ok": True},
         )
         self.assertIn("ok", resp.response_data)
-

@@ -1,9 +1,11 @@
 from datetime import date
-from django.test import TestCase
-from django.core.exceptions import ValidationError
+
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.test import TestCase
 
 from properties.models import Property, Room, RoomType
+
 from .models import Reservation, ReservationRoom
 
 User = get_user_model()
@@ -44,7 +46,9 @@ class ReservationModelTest(TestCase):
             check_in=date(2025, 1, 1),
             check_out=date(2025, 1, 3),
         )
-        ReservationRoom.objects.create(reservation=reservation1, room=self.room, room_type=self.room_type)
+        ReservationRoom.objects.create(
+            reservation=reservation1, room=self.room, room_type=self.room_type
+        )
 
         reservation2 = Reservation.objects.create(
             property=self.property,
@@ -58,4 +62,3 @@ class ReservationModelTest(TestCase):
         )
         with self.assertRaises(ValidationError):
             rr.clean()
-
