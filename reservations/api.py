@@ -13,6 +13,7 @@ from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.models import Availability, Property
 from properties.sync_service import SyncService
 from utils import ErrorSchema, SuccessSchema
+from utils.error_codes import ReservationError, ReservationErrorCode
 from utils.redsys import RedsysService
 
 from .models import PaymentNotificationLog, Reservation, ReservationRoom
@@ -37,7 +38,20 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                 property_id = data.property_id
                 current_date = check_in
 
-                property = Property.objects.get(id=property_id)
+                if check_in >= check_out:
+                    raise ReservationError(
+                        "Check-in must be before check-out",
+                        ReservationErrorCode.INVALID_DATES,
+                    )
+
+                try:
+                    property = Property.objects.get(id=property_id)
+                except Property.DoesNotExist as exc:
+                    raise ReservationError(
+                        "Property not found",
+                        ReservationErrorCode.NOT_FOUND,
+                    ) from exc
+
                 helper = PMSHelperFactory().get_helper(property)
                 SyncService.sync_rates_and_availability(
                     property, helper, checkin=check_in, checkout=check_out
@@ -50,9 +64,9 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                         property_id=property_id,
                     )
                     if availability.availability < 1:
-                        raise HttpError(
-                            400,
+                        raise ReservationError(
                             f"No availability for room type {room_type_id} on {current_date}.",
+                            ReservationErrorCode.NO_AVAILABILITY,
                         )
                     current_date += timedelta(days=1)
 
@@ -107,9 +121,12 @@ def create_reservation(request, reservations: List[ReservationSchema]):
 
         return {"success": True, "redsys_args": redsys_args}
 
+    except ReservationError:
+        raise
     except Exception as e:
-        raise HttpError(
-            400, f"An error occurred while creating the reservation(s): {str(e)}"
+        raise ReservationError(
+            f"An error occurred while creating the reservation(s): {str(e)}",
+            ReservationErrorCode.UNKNOWN_ERROR,
         )
 
 
@@ -144,11 +161,17 @@ def redsys_notification(request):
         )
 
         if not decoded:
-            raise HttpError(400, "Invalid signature")
+            raise ReservationError(
+                "Invalid signature",
+                ReservationErrorCode.PAYMENT_FAILED,
+            )
 
         reservations = Reservation.objects.filter(payment_order=order_id)
         if not reservations.exists():
-            raise HttpError(400, f"No reservations found for payment_order: {order_id}")
+            raise ReservationError(
+                f"No reservations found for payment_order: {order_id}",
+                ReservationErrorCode.NOT_FOUND,
+            )
 
         for reservation in reservations:
             reservation.payment_response = decoded
@@ -164,6 +187,8 @@ def redsys_notification(request):
             message="ok",
         )
 
+    except ReservationError:
+        raise
     except Exception as e:
         PaymentNotificationLog.objects.create(
             raw_parameters=json.dumps(dict(request.POST)),
@@ -172,8 +197,9 @@ def redsys_notification(request):
             is_valid=False,
             message=str(e),
         )
-        raise HttpError(
-            400, f"An error occurred while processing notification: {str(e)}"
+        raise ReservationError(
+            f"An error occurred while processing notification: {str(e)}",
+            ReservationErrorCode.UNKNOWN_ERROR,
         )
 
 
