@@ -13,6 +13,7 @@ from properties.admin_utils.inlines import (
     RoomImageInline,
     RoomInline,
     RoomTypeImageInline,
+    RoomTypeInline,
     TermsAndConditionsInline,
 )
 from properties.models import CommunicationMethod, Property, Room, RoomType, Service
@@ -29,7 +30,7 @@ class PropertyAdmin(GISModelAdmin):
     inlines = [
         PMSDataInline,
         PropertyImageInline,
-        RoomInline,
+        RoomTypeInline,
         CommunicationMethodInline,
         TermsAndConditionsInline,
     ]  # add "current_reservations"

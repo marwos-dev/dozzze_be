@@ -6,6 +6,7 @@ from properties.models import (
     PropertyImage,
     Room,
     RoomImage,
+    RoomType,
     RoomTypeImage,
     TermsAndConditions,
 )
@@ -61,3 +62,10 @@ class PropertyImageInline(admin.TabularInline):
 class RoomTypeImageInline(admin.TabularInline):
     model = RoomTypeImage
     extra = 1
+
+
+class RoomTypeInline(admin.StackedInline):
+    model = RoomType
+    extra = 1
+    show_change_link = True
+    inlines = [RoomTypeImageInline]
