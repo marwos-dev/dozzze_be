@@ -10,6 +10,11 @@
                 {{ sync_button|safe }}
             </div>
         {% endif %}
+        {% if dashboard_button %}
+            <div class="form-group">
+                {{ dashboard_button|safe }}
+            </div>
+        {% endif %}
          <div class="form-group">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reservationsModal">
               Ver últimas reservas

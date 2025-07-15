@@ -167,6 +167,10 @@ class Reservation(models.Model):
         rooms = ", ".join([room.name for room in self.rooms.all()])
         return f"Reserva en {rooms} del {self.check_in} al {self.check_out}"
 
+    def get_room_types(self):
+        room_types = self.reservations.select_related("room_type").all()
+        return ", ".join(set(rr.room_type.name for rr in room_types if rr.room_type))
+
 
 class PaymentNotificationLog(models.Model):
     received_at = models.DateTimeField(auto_now_add=True)

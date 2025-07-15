@@ -437,11 +437,7 @@ class FnsPropertyHelper(BasePropertyHelper):
                             }
                         )
 
-                if len(rooms) == 1:
-                    reservation_data["rooms"] = rooms[0]
-                else:
-                    reservation_data["rooms"] = rooms
-
+                reservation_data["rooms"] = rooms
                 reservations.append(reservation_data)
 
         return reservations
