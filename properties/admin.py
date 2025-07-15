@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.urls import path, reverse
 from django.utils.html import format_html
+from django.template.response import TemplateResponse
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.admin_utils.inlines import (
@@ -116,6 +117,11 @@ class PropertyAdmin(GISModelAdmin):
                 "<int:property_id>/sync-pms/",
                 self.admin_site.admin_view(self.sync_with_pms),
                 name="sync_property_with_pms",
+            ),
+            path(
+                "dashboard/",
+                self.admin_site.admin_view(self.dashboard_view),
+                name="properties_dashboard",
             ),
         ]
         return custom_urls + urls
@@ -272,6 +278,66 @@ class PropertyAdmin(GISModelAdmin):
 
         return super().change_view(
             request, object_id, form_url, extra_context=extra_context
+        )
+
+    def dashboard_view(self, request):
+        from django.db.models import Sum
+        from reservations.models import ReservationRoom
+
+        data = (
+            ReservationRoom.objects.filter(
+                reservation__property__owner=request.user
+            )
+            .values(
+                "reservation__property__name",
+                "room_type__name",
+            )
+            .annotate(total=Sum("price"))
+        )
+
+        properties = sorted(
+            {d["reservation__property__name"] for d in data}
+        )
+        room_types = sorted({d["room_type__name"] for d in data})
+
+        datasets = []
+        colors = [
+            "#ff6384",
+            "#36a2eb",
+            "#cc65fe",
+            "#ffce56",
+            "#2ecc71",
+            "#e67e22",
+            "#1abc9c",
+            "#e74c3c",
+        ]
+        for i, rt in enumerate(room_types):
+            values = []
+            for prop in properties:
+                val = 0
+                for entry in data:
+                    if (
+                        entry["reservation__property__name"] == prop
+                        and entry["room_type__name"] == rt
+                    ):
+                        val = entry["total"] or 0
+                        break
+                values.append(val)
+            datasets.append({
+                "label": rt or "N/A",
+                "data": values,
+                "color": colors[i % len(colors)],
+            })
+
+        context = {
+            "title": "Dashboard",
+            "labels": properties,
+            "datasets": datasets,
+        }
+        return TemplateResponse(
+            request,
+            "admin/properties/property/dashboard.html",
+            context,
         )
 
 
