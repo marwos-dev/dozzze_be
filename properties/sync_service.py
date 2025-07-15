@@ -129,12 +129,14 @@ class SyncService:
                 # if "taquilla" in room["external_room_type_name"].lower():
                 #     continue
                 room_type = RoomType.objects.filter(
+                    property=prop,
                     external_id=room["external_room_type_id"],
                     name=room["external_room_type_name"],
                 ).first()
 
                 if not room_type:
                     room_type = RoomType.objects.create(
+                        property=prop,
                         external_id=room["external_room_type_id"],
                         name=room["external_room_type_name"],
                     )

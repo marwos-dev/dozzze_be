@@ -115,7 +115,15 @@ class PropertyImage(models.Model):
 
 
 class RoomType(models.Model):
-    name = models.CharField(max_length=50, unique=True, verbose_name="Nombre")
+    property = models.ForeignKey(
+        Property,
+        related_name="room_types",
+        on_delete=models.CASCADE,
+        verbose_name="Propiedad",
+        null=True,
+        blank=True,
+    )
+    name = models.CharField(max_length=50, verbose_name="Nombre")
     external_id = models.CharField(
         max_length=255, null=True, blank=True, verbose_name="ID Externo"
     )
@@ -133,6 +141,7 @@ class RoomType(models.Model):
         verbose_name = "Tipo de Habitación"
         verbose_name_plural = "Tipos de Habitaciones"
         ordering = ["name"]
+        unique_together = ("name", "property")
 
     def __str__(self):
         return self.name
