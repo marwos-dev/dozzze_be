@@ -2,9 +2,9 @@ from django.contrib import admin, messages
 from django.contrib.gis.admin import GISModelAdmin
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
-from django.template.response import TemplateResponse
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.admin_utils.inlines import (
@@ -273,6 +273,10 @@ class PropertyAdmin(GISModelAdmin):
                         reverse("admin:sync_property_with_pms", args=[object_id]),
                     ),
                     "recent_reservations": page_obj,
+                    "dashboard_button": format_html(
+                        '<a class="btn btn-primary" href="{}">Ir al Dashboard</a>',
+                        reverse("admin:properties_dashboard"),
+                    ),
                 }
             )
 
@@ -282,12 +286,11 @@ class PropertyAdmin(GISModelAdmin):
 
     def dashboard_view(self, request):
         from django.db.models import Sum
+
         from reservations.models import ReservationRoom
 
         data = (
-            ReservationRoom.objects.filter(
-                reservation__property__owner=request.user
-            )
+            ReservationRoom.objects.filter(reservation__property__owner=request.user)
             .values(
                 "reservation__property__name",
                 "room_type__name",
@@ -295,9 +298,7 @@ class PropertyAdmin(GISModelAdmin):
             .annotate(total=Sum("price"))
         )
 
-        properties = sorted(
-            {d["reservation__property__name"] for d in data}
-        )
+        properties = sorted({d["reservation__property__name"] for d in data})
         room_types = sorted({d["room_type__name"] for d in data})
 
         datasets = []
@@ -323,11 +324,13 @@ class PropertyAdmin(GISModelAdmin):
                         val = entry["total"] or 0
                         break
                 values.append(val)
-            datasets.append({
-                "label": rt or "N/A",
-                "data": values,
-                "color": colors[i % len(colors)],
-            })
+            datasets.append(
+                {
+                    "label": rt or "N/A",
+                    "data": values,
+                    "color": colors[i % len(colors)],
+                }
+            )
 
         context = {
             "title": "Dashboard",

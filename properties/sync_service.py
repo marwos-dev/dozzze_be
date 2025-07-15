@@ -218,15 +218,24 @@ class SyncService:
             )
             reservations_to_create.append(reservation)
 
-            rooms = None
-            if rooms:
-                reservation_room = ReservationRoom(
-                    reservation=reservation,
-                    room=rooms,
-                    price=reservation_data.get("total_price", 0),
-                    guests=reservation_data["room"]["occupancy"],
-                )
-                reservations_rooms_to_create.append(reservation_room)
+            if rooms := reservation_data["rooms"]:
+                for room in rooms:
+
+                    if not (
+                        room_type := RoomType.objects.filter(
+                            external_id=room["room_type_id"]
+                        ).first()
+                    ):
+                        print(f"Room type not found: {room['room_type_id']}")
+                        continue
+
+                    reservation_room = ReservationRoom(
+                        reservation=reservation,
+                        room_type=room_type,
+                        price=reservation_data.get("total_price", 0),
+                        guests=room.get("occupancy", 1),
+                    )
+                    reservations_rooms_to_create.append(reservation_room)
 
         if reservations_to_create:
             Reservation.objects.bulk_create(reservations_to_create)
