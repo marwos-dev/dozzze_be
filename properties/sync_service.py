@@ -157,7 +157,7 @@ class SyncService:
         return True
 
     @classmethod
-    def sync_reservations(cls, prop: Property, helper, user = None):
+    def sync_reservations(cls, prop: Property, helper, user=None):
         reservations_data = helper.download_reservations(prop)
         if not reservations_data:
             return False
