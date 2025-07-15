@@ -157,7 +157,7 @@ class SyncService:
         return True
 
     @classmethod
-    def sync_reservations(cls, prop: Property, helper, user):
+    def sync_reservations(cls, prop: Property, helper, user = None):
         reservations_data = helper.download_reservations(prop)
         if not reservations_data:
             return False
@@ -167,7 +167,7 @@ class SyncService:
         for reservation_data in reservations_data:
 
             already_exist = Reservation.objects.filter(
-                user=user,
+                user=user if user else None,
                 check_in=datetime.strptime(
                     reservation_data["check_in"], "%Y-%m-%d"
                 ).date(),
