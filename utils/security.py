@@ -1,7 +1,7 @@
 # security.py
 from django.conf import settings
-from ninja.errors import HttpError
 from ninja.security import APIKeyHeader
+from utils import APIError, SecurityErrorCode
 
 
 class PublicAPIKey(APIKeyHeader):
@@ -14,4 +14,4 @@ class PublicAPIKey(APIKeyHeader):
 
         if key == settings.PUBLIC_API_KEY:
             return key
-        raise HttpError(403, "Access denied")
+        raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)

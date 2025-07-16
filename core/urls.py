@@ -23,7 +23,7 @@ from customers.api import customer_router
 from properties.api import router as properties_router
 from reservations.api import router as reservation_router
 from utils.auth_bearer import AuthBearer
-from utils.error_codes import ReservationError
+from utils.error_codes import APIError
 from utils.schemas import ErrorSchema
 from utils.security import PublicAPIKey
 from zones.api import router as zones_router
@@ -32,7 +32,7 @@ public_auth = PublicAPIKey()
 auth_bearer = AuthBearer()
 
 
-def reservation_exception_handler(request, exc: ReservationError):
+def api_exception_handler(request, exc: APIError):
     return api.create_response(
         request,
         ErrorSchema(detail=str(exc.message), code=int(exc.code)),
@@ -41,7 +41,7 @@ def reservation_exception_handler(request, exc: ReservationError):
 
 
 api = NinjaAPI()
-api.add_exception_handler(ReservationError, reservation_exception_handler)
+api.add_exception_handler(APIError, api_exception_handler)
 
 api.add_router(
     "/customers/",

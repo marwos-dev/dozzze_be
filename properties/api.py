@@ -4,8 +4,8 @@ from datetime import timedelta
 from typing import List, Optional
 
 from ninja import Query, Router
-from ninja.errors import HttpError
 from ninja.throttling import UserRateThrottle
+from utils import APIError, PropertyErrorCode
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from utils import ErrorSchema
@@ -46,16 +46,20 @@ def available_properties(
 )
 def get_availability(request, data: AvailabilityRequest):
     if not data.check_in:
-        raise HttpError(403, "Invalid check-in date")
+        raise APIError("Invalid check-in date", PropertyErrorCode.INVALID_CHECKIN_DATE, 403)
 
     if data.check_in > data.check_out:
-        raise HttpError(403, "Check-in date cannot be after check-out date")
+        raise APIError(
+            "Check-in date cannot be after check-out date",
+            PropertyErrorCode.CHECKIN_AFTER_CHECKOUT,
+            403,
+        )
 
     property_obj = None
     if data.property_id:
         property_obj = Property.objects.filter(id=data.property_id, active=True).first()
         if not property_obj:
-            raise HttpError(404, "Property not found")
+            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
     date_range = [
         data.check_in + timedelta(days=i)
@@ -109,7 +113,11 @@ def get_availability(request, data: AvailabilityRequest):
             try:
                 parsed_rates = json.loads(availability.rates)
             except Exception:
-                raise HttpError(400, f"Could not parse rates for date {date}")
+                raise APIError(
+                    f"Could not parse rates for date {date}",
+                    PropertyErrorCode.RATES_PARSE_ERROR,
+                    400,
+                )
 
             rooms_availability.append(
                 RoomAvailability(
@@ -132,7 +140,11 @@ def get_availability(request, data: AvailabilityRequest):
                         found = True
                         break
                 if not found:
-                    raise HttpError(400, f"No price found for {data.guests} guests")
+                    raise APIError(
+                        f"No price found for {data.guests} guests",
+                        PropertyErrorCode.PRICE_NOT_FOUND,
+                        400,
+                    )
 
         # Filtrar solo los válidos
         valid_totals = [
@@ -151,7 +163,11 @@ def get_availability(request, data: AvailabilityRequest):
         )
 
     if not rooms_availability:
-        raise HttpError(404, "No availability for the selected dates")
+        raise APIError(
+            "No availability for the selected dates",
+            PropertyErrorCode.NO_AVAILABILITY,
+            404,
+        )
 
     return {
         "rooms": rooms_availability,
@@ -165,7 +181,7 @@ def get_property(request, property_id: int):
         _property = Property.objects.get(id=property_id)
         return _property
     except Property.DoesNotExist:
-        return {"error": "Property not found"}
+        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
 @router.get(
@@ -176,7 +192,7 @@ def get_property_rooms(request, property_id: int):
         _property = Property.objects.get(id=property_id)
         return _property.rooms.all()
     except Property.DoesNotExist:
-        raise HttpError(404, "Property not found")
+        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
 @router.get("/rooms/{room_id}", response=RoomOut, throttle=[UserRateThrottle("10/m")])
@@ -185,7 +201,7 @@ def get_room(request, room_id: int):
         room = Room.objects.get(id=room_id)
         return room
     except Room.DoesNotExist:
-        raise HttpError(404, "Room not found")
+        raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
 
 
 @router.get("/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")])
@@ -200,11 +216,12 @@ def get_rooms(
         elif property_id:
             properties = Property.objects.filter(id=property_id)
         else:
-            raise HttpError(400, "Zone ID or Property ID is required")
+            raise APIError(
+                "Zone ID or Property ID is required",
+                PropertyErrorCode.ZONE_OR_PROPERTY_REQUIRED,
+                400,
+            )
 
         return Room.objects.filter(property__in=properties)
     except Property.DoesNotExist:
-        raise HttpError(
-            404,
-            "Property not found",
-        )
+        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
