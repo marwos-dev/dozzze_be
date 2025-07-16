@@ -3,7 +3,7 @@ from typing import List
 from ninja import Router
 from ninja.responses import Response
 
-from utils import ErrorSchema
+from utils import APIError, ErrorSchema, ZoneErrorCode
 
 from .models import Zone
 from .schemas import ZoneOut
@@ -13,11 +13,13 @@ router = Router(tags=["zones"])
 
 @router.get("/{zone_id}/polygon")
 def zone_polygon(request, zone_id):
-    zone = Zone.objects.get(id=zone_id)
+    zone_search = Zone.objects.filter(id=zone_id).first()
+    if not zone_search:
+        raise APIError("Zone not found", ZoneErrorCode.INVALID_ZONE_ID ,404)
     return Response(
         {
-            "coordinates": zone.area.geojson,
-            "name": zone.name,
+            "coordinates": zone_search.area.geojson,
+            "name": zone_search.name,
         }
     )
 
@@ -43,9 +45,6 @@ def zone(request, zone_id):
     * 200 OK - Returns the zone details
     * 404 Not Found - Zone not found
     """
-    # try:
-    #     return Zone.objects.get(id=zone_id)
-    # except Zone.DoesNotExist:
-    #     raise HttpError(404, "Zone not found")
-    #
-    return Zone.objects.get(id=zone_id)
+    if not (zone_search := Zone.objects.filter(id=zone_id).first()):
+        raise APIError("Zone not found", ZoneErrorCode.INVALID_ZONE_ID, 404)
+    return zone_search

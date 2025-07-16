@@ -8,6 +8,7 @@ from .error_codes import (
     PropertyErrorCode,
     CustomerErrorCode,
     SecurityErrorCode,
+    ZoneErrorCode
 )
 from .SingletonMeta import SingletonMeta
 from .text_utils import extract_pax
@@ -26,4 +27,5 @@ __all__ = [
     "PropertyErrorCode",
     "CustomerErrorCode",
     "SecurityErrorCode",
+    "ZoneErrorCode"
 ]

@@ -61,3 +61,10 @@ class SecurityErrorCode(IntEnum):
 
     ACCESS_DENIED = 400
 
+
+class ZoneErrorCode(IntEnum):
+    """Error codes for zone related issues."""
+
+    ZONE_NOT_FOUND = 500
+    INVALID_ZONE_ID = 501
+    ZONE_AREA_TOO_LARGE = 502

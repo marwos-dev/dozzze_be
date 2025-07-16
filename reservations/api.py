@@ -13,7 +13,7 @@ from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.models import Availability, Property
 from properties.sync_service import SyncService
 from utils import ErrorSchema, SuccessSchema
-from utils.error_codes import ReservationError, ReservationErrorCode
+from utils.error_codes import APIError, ReservationErrorCode
 from utils.redsys import RedsysService
 
 from .models import PaymentNotificationLog, Reservation, ReservationRoom
@@ -39,7 +39,7 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                 current_date = check_in
 
                 if check_in >= check_out:
-                    raise ReservationError(
+                    raise APIError(
                         "Check-in must be before check-out",
                         ReservationErrorCode.INVALID_DATES,
                     )
@@ -47,7 +47,7 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                 try:
                     property = Property.objects.get(id=property_id)
                 except Property.DoesNotExist as exc:
-                    raise ReservationError(
+                    raise APIError(
                         "Property not found",
                         ReservationErrorCode.NOT_FOUND,
                     ) from exc
@@ -64,7 +64,7 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                         property_id=property_id,
                     )
                     if availability.availability < 1:
-                        raise ReservationError(
+                        raise APIError(
                             f"No availability for room type {room_type_id} on {current_date}.",
                             ReservationErrorCode.NO_AVAILABILITY,
                         )
@@ -121,10 +121,8 @@ def create_reservation(request, reservations: List[ReservationSchema]):
 
         return {"success": True, "redsys_args": redsys_args}
 
-    except ReservationError:
-        raise
     except Exception as e:
-        raise ReservationError(
+        raise APIError(
             f"An error occurred while creating the reservation(s): {str(e)}",
             ReservationErrorCode.UNKNOWN_ERROR,
         )
@@ -161,14 +159,14 @@ def redsys_notification(request):
         )
 
         if not decoded:
-            raise ReservationError(
+            raise APIError(
                 "Invalid signature",
                 ReservationErrorCode.PAYMENT_FAILED,
             )
 
         reservations = Reservation.objects.filter(payment_order=order_id)
         if not reservations.exists():
-            raise ReservationError(
+            raise APIError(
                 f"No reservations found for payment_order: {order_id}",
                 ReservationErrorCode.NOT_FOUND,
             )
@@ -187,8 +185,6 @@ def redsys_notification(request):
             message="ok",
         )
 
-    except ReservationError:
-        raise
     except Exception as e:
         PaymentNotificationLog.objects.create(
             raw_parameters=json.dumps(dict(request.POST)),
@@ -197,7 +193,7 @@ def redsys_notification(request):
             is_valid=False,
             message=str(e),
         )
-        raise ReservationError(
+        raise APIError(
             f"An error occurred while processing notification: {str(e)}",
             ReservationErrorCode.UNKNOWN_ERROR,
         )
