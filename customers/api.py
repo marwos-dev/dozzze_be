@@ -2,12 +2,11 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.core.signing import BadSignature, SignatureExpired
 from ninja import Router
-from ninja.errors import HttpError
 from ninja.throttling import UserRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from customers.schemas import LoginIn, ProfileOut, RefreshTokenIn, TokenOut
-from utils import ErrorSchema, SuccessSchema
+from utils import APIError, CustomerErrorCode, ErrorSchema, SuccessSchema
 from utils.auth_bearer import AuthBearer
 from utils.email_service import EmailService
 from utils.tokens import generate_activation_token, verify_activation_token
@@ -31,7 +30,7 @@ def signup(request, data: LoginIn):
     * 400 Bad Request - Error during signup
     """
     if UserModel.objects.filter(email=data.email).exists():
-        raise HttpError(400, "Email already exists")
+        raise APIError("Email already exists", CustomerErrorCode.EMAIL_EXISTS, 400)
 
     user = UserModel.objects.create_user(
         username=f"user-{data.email}",
@@ -59,13 +58,15 @@ def login(request, data: LoginIn):
     try:
         _user = UserModel.objects.get(email=data.email)
         if not _user.is_active:
-            raise HttpError(400, "User is inactive")
+            raise APIError("User is inactive", CustomerErrorCode.USER_INACTIVE, 400)
 
         user = authenticate(
             request, username=_user.get_username(), password=data.password
         )
         if not user:
-            raise HttpError(401, "Credenciales inválidas")
+            raise APIError(
+                "Credenciales inválidas", CustomerErrorCode.INVALID_CREDENTIALS, 401
+            )
 
         refresh = RefreshToken.for_user(user)
         return TokenOut(
@@ -75,7 +76,7 @@ def login(request, data: LoginIn):
             first_name=user.first_name,
         )
     except UserModel.DoesNotExist:
-        raise HttpError(400, "User does not exist")
+        raise APIError("User does not exist", CustomerErrorCode.USER_NOT_FOUND, 400)
 
 
 @customer_router.get(
@@ -91,7 +92,7 @@ def profile(request):
     """
     user = request.user
     if not user.is_authenticated:
-        raise HttpError(401, "User not authenticated")
+        raise APIError("User not authenticated", CustomerErrorCode.UNAUTHENTICATED, 401)
 
     return ProfileOut(
         email=user.email,
@@ -109,7 +110,11 @@ def refresh_token(request, data: RefreshTokenIn):
 
         return TokenOut(access=access_token, refresh=new_refresh)
     except TokenError:
-        raise HttpError(401, "Refresh token inválido o expirado")
+        raise APIError(
+            "Refresh token inválido o expirado",
+            CustomerErrorCode.REFRESH_TOKEN_INVALID,
+            401,
+        )
 
 
 @customer_router.get(
@@ -128,6 +133,10 @@ def activate_account(request, token: str):
             success=True,
         )
     except (BadSignature, SignatureExpired):
-        raise HttpError(400, "Token inválido o expirado")
+        raise APIError(
+            "Token inválido o expirado",
+            CustomerErrorCode.TOKEN_INVALID,
+            400,
+        )
     except UserModel.DoesNotExist:
-        raise HttpError(404, "Usuario no encontrado")
+        raise APIError("Usuario no encontrado", CustomerErrorCode.USER_NOT_FOUND, 404)
