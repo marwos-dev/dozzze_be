@@ -1,6 +1,7 @@
 # security.py
 from django.conf import settings
 from ninja.security import APIKeyHeader
+
 from utils import APIError, SecurityErrorCode
 
 

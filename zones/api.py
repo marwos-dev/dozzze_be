@@ -15,7 +15,7 @@ router = Router(tags=["zones"])
 def zone_polygon(request, zone_id):
     zone_search = Zone.objects.filter(id=zone_id).first()
     if not zone_search:
-        raise APIError("Zone not found", ZoneErrorCode.INVALID_ZONE_ID ,404)
+        raise APIError("Zone not found", ZoneErrorCode.INVALID_ZONE_ID, 404)
     return Response(
         {
             "coordinates": zone_search.area.geojson,

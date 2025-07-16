@@ -3,11 +3,10 @@ from django.contrib.auth import authenticate, get_user_model
 from django.core.signing import BadSignature, SignatureExpired
 from ninja import Router
 from ninja.throttling import UserRateThrottle
-from utils import APIError, CustomerErrorCode
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from customers.schemas import LoginIn, ProfileOut, RefreshTokenIn, TokenOut
-from utils import ErrorSchema, SuccessSchema
+from utils import APIError, CustomerErrorCode, ErrorSchema, SuccessSchema
 from utils.auth_bearer import AuthBearer
 from utils.email_service import EmailService
 from utils.tokens import generate_activation_token, verify_activation_token
@@ -65,7 +64,9 @@ def login(request, data: LoginIn):
             request, username=_user.get_username(), password=data.password
         )
         if not user:
-            raise APIError("Credenciales inválidas", CustomerErrorCode.INVALID_CREDENTIALS, 401)
+            raise APIError(
+                "Credenciales inválidas", CustomerErrorCode.INVALID_CREDENTIALS, 401
+            )
 
         refresh = RefreshToken.for_user(user)
         return TokenOut(

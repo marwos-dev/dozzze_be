@@ -5,10 +5,9 @@ from typing import List, Optional
 
 from ninja import Query, Router
 from ninja.throttling import UserRateThrottle
-from utils import APIError, PropertyErrorCode
 
 from pms.utils.property_helper_factory import PMSHelperFactory
-from utils import ErrorSchema
+from utils import APIError, ErrorSchema, PropertyErrorCode
 
 from .models import Availability, Property, Room
 from .schemas import (
@@ -46,7 +45,9 @@ def available_properties(
 )
 def get_availability(request, data: AvailabilityRequest):
     if not data.check_in:
-        raise APIError("Invalid check-in date", PropertyErrorCode.INVALID_CHECKIN_DATE, 403)
+        raise APIError(
+            "Invalid check-in date", PropertyErrorCode.INVALID_CHECKIN_DATE, 403
+        )
 
     if data.check_in > data.check_out:
         raise APIError(
@@ -59,7 +60,9 @@ def get_availability(request, data: AvailabilityRequest):
     if data.property_id:
         property_obj = Property.objects.filter(id=data.property_id, active=True).first()
         if not property_obj:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
 
     date_range = [
         data.check_in + timedelta(days=i)

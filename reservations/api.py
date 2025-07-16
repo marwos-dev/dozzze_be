@@ -7,7 +7,6 @@ from django.db import transaction
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from ninja import Router
-from ninja.errors import HttpError
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.models import Availability, Property

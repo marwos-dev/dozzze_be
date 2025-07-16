@@ -1,4 +1,5 @@
 from enum import IntEnum
+
 from ninja.errors import HttpError
 
 
@@ -27,7 +28,9 @@ class ReservationErrorCode(IntEnum):
 class ReservationError(APIError):
     """HttpError subclass that carries a ReservationErrorCode."""
 
-    def __init__(self, message: str, code: ReservationErrorCode, status_code: int = 400):
+    def __init__(
+        self, message: str, code: ReservationErrorCode, status_code: int = 400
+    ):
         super().__init__(message, code, status_code)
 
 
