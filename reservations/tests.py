@@ -1,10 +1,13 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 
 from properties.models import Property, Room, RoomType
+from reservations.tasks import send_check_in_reminder
 
 from .models import Reservation, ReservationRoom
 
@@ -62,3 +65,34 @@ class ReservationModelTest(TestCase):
         )
         with self.assertRaises(ValidationError):
             rr.clean()
+
+
+class ReservationReminderTaskTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username="owner2", password="pass")
+        self.property = Property.objects.create(
+            owner=self.user,
+            name="Prop 2",
+            description="Desc",
+            address="Addr",
+            location="POINT(0 0)",
+        )
+        self.room_type = RoomType.objects.create(property=self.property, name="Suite")
+
+    def test_send_reminder(self):
+        check_in = timezone.localdate() + timezone.timedelta(days=7)
+        reservation = Reservation.objects.create(
+            property=self.property,
+            check_in=check_in,
+            check_out=check_in + timezone.timedelta(days=2),
+            guest_email="guest@example.com",
+            status=Reservation.CONFIRMED,
+        )
+        ReservationRoom.objects.create(
+            reservation=reservation, room_type=self.room_type
+        )
+
+        mail.outbox = []
+        send_check_in_reminder(7)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("guest@example.com", mail.outbox[0].to)
