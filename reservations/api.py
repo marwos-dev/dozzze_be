@@ -8,12 +8,11 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from ninja import Router
 
-from utils.email_service import EmailService
-
 from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.models import Availability, Property
 from properties.sync_service import SyncService
 from utils import ErrorSchema, SuccessSchema
+from utils.email_service import EmailService
 from utils.error_codes import APIError, ReservationError, ReservationErrorCode
 from utils.redsys import RedsysService
 
@@ -223,7 +222,9 @@ def my_reservations(request):
     return reservations
 
 
-@router.post("/{reservation_id}/cancel", response={200: SuccessSchema, 400: ErrorSchema})
+@router.post(
+    "/{reservation_id}/cancel", response={200: SuccessSchema, 400: ErrorSchema}
+)
 def cancel_reservation(request, reservation_id: int):
     try:
         reservation = Reservation.objects.get(id=reservation_id, user=request.user)

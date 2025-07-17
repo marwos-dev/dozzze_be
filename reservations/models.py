@@ -1,9 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from utils.error_codes import ReservationError, ReservationErrorCode
-
 from properties.models import Room, RoomType
+from utils.error_codes import ReservationError, ReservationErrorCode
 
 
 class ReservationRoom(models.Model):
