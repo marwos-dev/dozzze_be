@@ -1,0 +1,4 @@
+Hola {{ reservation.guest_name }}!
+Tu reserva en {{ property.name }} comienza el {{ reservation.check_in }} y finaliza el {{ reservation.check_out }}.
+Habitaciones reservadas: {{ reservation.get_room_types }}
+Nos vemos pronto.
