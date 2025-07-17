@@ -1,17 +1,15 @@
 from datetime import date
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.exceptions import ValidationError
-from django.http import HttpRequest, QueryDict
 from django.test import TestCase
 from django.utils import timezone
 
 from properties.models import Property, Room, RoomType
-from reservations.api import redsys_notification, rs
 from reservations.tasks import send_check_in_reminder
 from utils.error_codes import ReservationError
+
 from .models import Reservation, ReservationRoom
 
 User = get_user_model()
