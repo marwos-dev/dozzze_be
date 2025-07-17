@@ -1,10 +1,13 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 
 from properties.models import Property, Room, RoomType
+from reservations.tasks import send_check_in_reminder
 
 from .models import Reservation, ReservationRoom
 
@@ -63,11 +66,6 @@ class ReservationModelTest(TestCase):
         with self.assertRaises(ValidationError):
             rr.clean()
 
-from django.core import mail
-from django.utils import timezone
-
-from reservations.tasks import send_check_in_reminder
-
 
 class ReservationReminderTaskTest(TestCase):
     def setUp(self):
@@ -90,7 +88,9 @@ class ReservationReminderTaskTest(TestCase):
             guest_email="guest@example.com",
             status=Reservation.CONFIRMED,
         )
-        ReservationRoom.objects.create(reservation=reservation, room_type=self.room_type)
+        ReservationRoom.objects.create(
+            reservation=reservation, room_type=self.room_type
+        )
 
         mail.outbox = []
         send_check_in_reminder(7)
