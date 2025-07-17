@@ -1,0 +1,3 @@
+Hola {{ reservation.guest_name }}!
+Estamos procesando la cancelación de tu reserva en {{ reservation.property.name }}.
+En las próximas horas verás el impacto en tu resumen o la devolución del dinero abonado.

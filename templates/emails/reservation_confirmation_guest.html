@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="es">
+  <body>
+    <h1>Reserva confirmada</h1>
+    <p>Hola {{ reservation.guest_name }}!</p>
+    <p>Tu reserva en {{ reservation.property.name }} del {{ reservation.check_in }} al {{ reservation.check_out }} ha sido confirmada.</p>
+    <p>Habitaciones reservadas: {{ reservation.get_room_types }}</p>
+  </body>
+</html>

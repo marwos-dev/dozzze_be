@@ -12,7 +12,8 @@ from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.models import Availability, Property
 from properties.sync_service import SyncService
 from utils import ErrorSchema, SuccessSchema
-from utils.error_codes import APIError, ReservationErrorCode
+from utils.email_service import EmailService
+from utils.error_codes import APIError, ReservationError, ReservationErrorCode
 from utils.redsys import RedsysService
 
 from .models import PaymentNotificationLog, Reservation, ReservationRoom
@@ -177,6 +178,23 @@ def redsys_notification(request):
             reservation.status = Reservation.CONFIRMED
             reservation.save()
 
+            if reservation.guest_email:
+                EmailService.send_email(
+                    subject="Reserva confirmada",
+                    to_email=reservation.guest_email,
+                    template_name="emails/reservation_confirmation_guest.html",
+                    context={"reservation": reservation},
+                )
+
+            owner_email = getattr(reservation.property.owner, "email", None)
+            if owner_email:
+                EmailService.send_email(
+                    subject="Nueva reserva confirmada",
+                    to_email=owner_email,
+                    template_name="emails/reservation_confirmation_owner.html",
+                    context={"reservation": reservation},
+                )
+
             # Notificar al PMS si lo deseas aquí
 
         return SuccessSchema(
@@ -202,3 +220,37 @@ def redsys_notification(request):
 def my_reservations(request):
     reservations = Reservation.objects.filter(user=request.user).order_by("-created_at")
     return reservations
+
+
+@router.post(
+    "/{reservation_id}/cancel", response={200: SuccessSchema, 400: ErrorSchema}
+)
+def cancel_reservation(request, reservation_id: int):
+    try:
+        reservation = Reservation.objects.get(id=reservation_id, user=request.user)
+    except Reservation.DoesNotExist:
+        raise APIError("Reservation not found", ReservationErrorCode.NOT_FOUND)
+
+    try:
+        reservation.cancel()
+    except ReservationError as e:
+        raise APIError(str(e), e.code)
+
+    if reservation.guest_email:
+        EmailService.send_email(
+            subject="Cancelación en proceso",
+            to_email=reservation.guest_email,
+            template_name="emails/reservation_cancellation_processing.html",
+            context={"reservation": reservation},
+        )
+
+    owner_email = getattr(reservation.property.owner, "email", None)
+    if owner_email:
+        EmailService.send_email(
+            subject="Reserva pendiente de devolución",
+            to_email=owner_email,
+            template_name="emails/reservation_cancellation_owner_notice.html",
+            context={"reservation": reservation},
+        )
+
+    return SuccessSchema(message="Reserva cancelada")

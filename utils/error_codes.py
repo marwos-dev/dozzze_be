@@ -23,6 +23,7 @@ class ReservationErrorCode(IntEnum):
     INVALID_DATES = 102
     PAYMENT_FAILED = 103
     NOT_FOUND = 104
+    CANCEL_NOT_ALLOWED = 105
 
 
 class ReservationError(APIError):
