@@ -1,6 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from utils.error_codes import ReservationError, ReservationErrorCode
+
 from properties.models import Room, RoomType
 
 
@@ -38,12 +40,16 @@ class Reservation(models.Model):
     PENDING = "pending"
     CONFIRMED = "confirmed"
     CANCELLED = "cancelled"
+    PENDING_REFUND = "pending_refund"
+    REFUNDED = "refunded"
     OK = "ok"
 
     STATUS_CHOICES = [
         (PENDING, "Pending"),
         (CONFIRMED, "Confirmed"),
+        (PENDING_REFUND, "Pending refund"),
         (CANCELLED, "Cancelled"),
+        (REFUNDED, "Refunded"),
         (OK, "Ok"),
     ]
     property = models.ForeignKey(
@@ -170,6 +176,39 @@ class Reservation(models.Model):
     def get_room_types(self):
         room_types = self.reservations.select_related("room_type").all()
         return ", ".join(set(rr.room_type.name for rr in room_types if rr.room_type))
+
+    def cancel(self):
+        """Mark the reservation as pending refund if cancellation is allowed."""
+        from django.utils import timezone
+
+        if self.status in [Reservation.CANCELLED, Reservation.PENDING_REFUND]:
+            raise ReservationError(
+                "Reservation already cancelled",
+                ReservationErrorCode.CANCEL_NOT_ALLOWED,
+            )
+
+        # Disallow cancellation if the reservation has been used
+        if self.status == Reservation.OK or (
+            self.check_in and self.check_in <= timezone.localdate()
+        ):
+            raise ReservationError(
+                "Reservation cannot be cancelled after being used",
+                ReservationErrorCode.CANCEL_NOT_ALLOWED,
+            )
+
+        self.status = Reservation.PENDING_REFUND
+        self.cancellation_date = timezone.now()
+        self.save()
+
+    def mark_refunded(self):
+        """Mark the reservation as refunded once the money has been returned."""
+        if self.status != Reservation.PENDING_REFUND:
+            raise ReservationError(
+                "Reservation is not pending refund",
+                ReservationErrorCode.CANCEL_NOT_ALLOWED,
+            )
+        self.status = Reservation.REFUNDED
+        self.save()
 
 
 class PaymentNotificationLog(models.Model):

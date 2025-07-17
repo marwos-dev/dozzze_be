@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="es">
+  <body>
+    <h1>Nueva reserva confirmada</h1>
+    <p>Se ha confirmado una nueva reserva en {{ reservation.property.name }}.</p>
+    <p>Huésped: {{ reservation.guest_name }}</p>
+    <p>Fechas: {{ reservation.check_in }} - {{ reservation.check_out }}</p>
+    <p>Habitaciones reservadas: {{ reservation.get_room_types }}</p>
+  </body>
+</html>

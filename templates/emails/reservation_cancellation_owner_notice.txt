@@ -1,0 +1,2 @@
+El usuario {{ reservation.guest_name }} solicitó cancelar su reserva en {{ reservation.property.name }}.
+Por favor revisa el administrador para procesar la devolución.

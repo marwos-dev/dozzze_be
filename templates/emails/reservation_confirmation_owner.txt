@@ -1,0 +1,4 @@
+Se ha confirmado una nueva reserva en {{ reservation.property.name }}.
+Huésped: {{ reservation.guest_name }}
+Fechas: {{ reservation.check_in }} - {{ reservation.check_out }}
+Habitaciones reservadas: {{ reservation.get_room_types }}

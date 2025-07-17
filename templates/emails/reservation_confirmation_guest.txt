@@ -1,0 +1,3 @@
+Hola {{ reservation.guest_name }}!
+Tu reserva en {{ reservation.property.name }} del {{ reservation.check_in }} al {{ reservation.check_out }} ha sido confirmada.
+Habitaciones reservadas: {{ reservation.get_room_types }}
