@@ -47,6 +47,10 @@ function addPolygonToMap(zoneId, map = window.map) {
 document.addEventListener("DOMContentLoaded", function () {
     const zoneSelect = document.querySelector("#id_zone");
     const geodjangoWidget = window.geodjango_location;
+    if (!zoneSelect || !geodjangoWidget) {
+        return;
+    }
+
     const map = geodjangoWidget.map;
     const zoneId = zoneSelect.value;
     if (zoneId) {
@@ -58,5 +62,5 @@ document.addEventListener("DOMContentLoaded", function () {
         if (selectedZoneId) {
             addPolygonToMap(selectedZoneId, map);
         }
-     });
+    });
 });

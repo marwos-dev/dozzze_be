@@ -1,16 +1,23 @@
 {% extends "admin/base_site.html" %}
 {% load static %}
 
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+{% endblock %}
+
 {% block extrahead %}
 {{ block.super }}
 {{ form.media }}
 {% endblock %}
 
 {% block content %}
-<h1>Crear Propiedad - Paso 2 de 4</h1>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit" class="default">Continuar</button>
-</form>
+<h1 class="text-2xl font-semibold mb-4">Crear Propiedad - Paso 2 de 4</h1>
+<div class="max-w-2xl bg-white p-6 rounded shadow">
+  <form method="post" class="space-y-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Continuar</button>
+  </form>
+</div>
 {% endblock %}

@@ -9,6 +9,7 @@ class PropertyStepForm(forms.ModelForm):
         fields = [
             "name",
             "description",
+            "zone",
             "address",
             "location",
             "cover_image",
