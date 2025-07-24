@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.contrib.gis.admin import OSMGeoAdmin
+from django.contrib.gis.admin import GISModelAdmin
 from django.utils.html import format_html
 
 from .models import Zone, ZoneImage
@@ -11,7 +11,7 @@ class ZoneImageInline(admin.TabularInline):
 
 
 @admin.register(Zone)
-class ZoneAdmin(OSMGeoAdmin):
+class ZoneAdmin(GISModelAdmin):
     inlines = [
         ZoneImageInline,
     ]
