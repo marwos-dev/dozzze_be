@@ -1,3 +1,7 @@
+if (window.ol && ol.proj && ol.proj.useGeographic) {
+    ol.proj.useGeographic();
+}
+
 function addPolygonToMap(zoneId, map = window.map) {
     fetch(`/api/zones/${zoneId}/polygon`, {
         credentials: "same-origin",
