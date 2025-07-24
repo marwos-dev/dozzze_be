@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "storages",
     "django.contrib.gis",
     "corsheaders",
+    "formtools",
     "django_celery_beat",
 ]
 

@@ -6,6 +6,13 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
 
+from .forms import (
+    CommunicationFormSet,
+    PmsDataForm,
+    PropertyImagesForm,
+    PropertyStepForm,
+)
+
 from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.admin_utils.inlines import (
     CommunicationMethodInline,
@@ -92,6 +99,13 @@ class PropertyAdmin(GISModelAdmin):
             return True
         return False
 
+    def add_view(self, request, form_url="", extra_context=None):
+        if request.user.is_staff and not request.user.is_superuser:
+            return HttpResponseRedirect(
+                reverse("admin:properties_property_add_step", args=[1])
+            )
+        return super().add_view(request, form_url, extra_context)
+
     def cover_preview(self, obj):
         if obj.cover_image:
             return format_html('<img src="{}" width="100" />', obj.cover_image.url)
@@ -119,12 +133,104 @@ class PropertyAdmin(GISModelAdmin):
                 name="sync_property_with_pms",
             ),
             path(
+                "add/step/<int:step>/",
+                self.admin_site.admin_view(self.add_stepper),
+                name="properties_property_add_step",
+            ),
+            path(
                 "dashboard/",
                 self.admin_site.admin_view(self.dashboard_view),
                 name="properties_dashboard",
             ),
         ]
         return custom_urls + urls
+
+    def add_stepper(self, request, step):
+        property_id = request.session.get("new_property_id")
+
+        if step == 1:
+            form = PropertyStepForm(request.POST or None, request.FILES or None)
+            if request.method == "POST" and form.is_valid():
+                prop = form.save(commit=False)
+                prop.owner = request.user
+                prop.save()
+                request.session["new_property_id"] = prop.pk
+                return HttpResponseRedirect(
+                    reverse("admin:properties_property_add_step", args=[2])
+                )
+            return TemplateResponse(
+                request,
+                "admin/properties/property/add_step1.html",
+                {"form": form},
+            )
+
+        if not property_id:
+            return HttpResponseRedirect(
+                reverse("admin:properties_property_add_step", args=[1])
+            )
+
+        prop = Property.objects.filter(pk=property_id, owner=request.user).first()
+        if not prop:
+            return HttpResponseRedirect(
+                reverse("admin:properties_property_add_step", args=[1])
+            )
+
+        if step == 2:
+            instance = getattr(prop, "pms_data", None)
+            form = PmsDataForm(request.POST or None, instance=instance)
+            if request.method == "POST" and form.is_valid():
+                pms_data = form.save(commit=False)
+                pms_data.property = prop
+                pms_data.save()
+                helper = PMSHelperFactory().get_helper(prop)
+                SyncService.sync_property_detail(prop, helper)
+                return HttpResponseRedirect(
+                    reverse("admin:properties_property_add_step", args=[3])
+                )
+            return TemplateResponse(
+                request,
+                "admin/properties/property/add_step2.html",
+                {"form": form},
+            )
+
+        if step == 3:
+            form = PropertyImagesForm(request.POST or None, request.FILES or None)
+            if request.method == "POST" and form.is_valid():
+                for img in request.FILES.getlist("images"):
+                    PropertyImage.objects.create(property=prop, image=img)
+                return HttpResponseRedirect(
+                    reverse("admin:properties_property_add_step", args=[4])
+                )
+            return TemplateResponse(
+                request,
+                "admin/properties/property/add_step3.html",
+                {"form": form},
+            )
+
+        if step == 4:
+            formset = CommunicationFormSet(request.POST or None)
+            if request.method == "POST" and formset.is_valid():
+                for form in formset:
+                    if form.cleaned_data.get("name") and form.cleaned_data.get("value"):
+                        CommunicationMethod.objects.create(
+                            property=prop,
+                            name=form.cleaned_data["name"],
+                            value=form.cleaned_data["value"],
+                        )
+                del request.session["new_property_id"]
+                self.message_user(request, "Propiedad creada correctamente")
+                return HttpResponseRedirect(
+                    reverse("admin:properties_property_change", args=[prop.pk])
+                )
+            return TemplateResponse(
+                request,
+                "admin/properties/property/add_step4.html",
+                {"formset": formset},
+            )
+
+        return HttpResponseRedirect(
+            reverse("admin:properties_property_add_step", args=[1])
+        )
 
     def sync_with_pms(self, request, property_id):
         prop = self.get_object(request, property_id)
