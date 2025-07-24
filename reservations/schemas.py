@@ -61,6 +61,7 @@ class RoomReservationSchema(Schema):
 
 
 class ReservationClientOut(Schema):
+    id: int
     room_reservations: List[RoomReservationSchema]
     property: str
     check_in: datetime
