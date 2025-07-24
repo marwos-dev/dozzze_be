@@ -37,9 +37,16 @@ class PmsDataForm(forms.ModelForm):
         ]
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    """Allow selecting multiple files in admin forms."""
+
+    allow_multiple_selected = True
+
+
 class PropertyImagesForm(forms.Form):
     images = forms.ImageField(
-        widget=forms.ClearableFileInput(attrs={"multiple": True}), required=False
+        widget=MultipleFileInput(attrs={"multiple": True}),
+        required=False,
     )
 
 
