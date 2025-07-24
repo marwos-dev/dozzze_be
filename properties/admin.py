@@ -318,7 +318,13 @@ class PropertyAdmin(GISModelAdmin):
                 pms.property = prop
                 pms.save()
                 # sincroniza pms
-                self.perform_pms_sync(request, prop)
+                success = self.perform_pms_sync(request, prop)
+                if success:
+                    self.message_user(
+                        request,
+                        "Sincronización completada, ya puede visualizar los tipos de habitación",
+                        level=messages.SUCCESS,
+                    )
                 request.session["wizard_property_id"] = prop.pk
                 return redirect(f"{reverse('admin:property_wizard')}?step=2")
             context = {

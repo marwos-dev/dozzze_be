@@ -54,6 +54,21 @@ CommunicationMethodFormSet = inlineformset_factory(
     Property, CommunicationMethod, form=CommunicationMethodForm, extra=1
 )
 
+class PropertyImageForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            classes = field.widget.attrs.get("class", "")
+            if name == "image":
+                field.widget.attrs["class"] = (classes + " form-control-file").strip()
+            else:
+                field.widget.attrs["class"] = (classes + " form-control").strip()
+
+    class Meta:
+        model = PropertyImage
+        fields = ["image", "caption"]
+
+
 PropertyImageFormSet = inlineformset_factory(
-    Property, PropertyImage, fields=["image", "caption"], extra=1
+    Property, PropertyImage, form=PropertyImageForm, extra=1
 )

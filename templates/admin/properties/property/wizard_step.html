@@ -3,10 +3,13 @@
 {% block content %}
 <div class="container mx-auto max-w-2xl">
   <h1 class="text-2xl mb-4">{{ title }}</h1>
-  <form method="post" enctype="multipart/form-data">
+  <form id="wizard-form" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {% if form %}
-      {% for field in form %}
+      {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+      {% endfor %}
+      {% for field in form.visible_fields %}
         <div class="form-group mb-4">
           {{ field.label_tag }}
           {{ field }}
@@ -19,7 +22,10 @@
     {% endif %}
     {% if forms %}
       {% for fr in forms %}
-        {% for field in fr %}
+        {% for hidden in fr.hidden_fields %}
+          {{ hidden }}
+        {% endfor %}
+        {% for field in fr.visible_fields %}
           <div class="form-group mb-4">
             {{ field.label_tag }}
             {{ field }}
@@ -34,8 +40,11 @@
     {% if formset %}
       {{ formset.management_form }}
       {% for f in formset.forms %}
+        {% for hidden in f.hidden_fields %}
+          {{ hidden }}
+        {% endfor %}
         <div class="border p-2 mb-2">
-          {% for field in f %}
+          {% for field in f.visible_fields %}
             <div class="form-group mb-4">
               {{ field.label_tag }}
               {{ field }}
@@ -49,8 +58,11 @@
       {% for fs in formsets %}
         {{ fs.management_form }}
         {% for f in fs.forms %}
+          {% for hidden in f.hidden_fields %}
+            {{ hidden }}
+          {% endfor %}
           <div class="border p-2 mb-2">
-            {% for field in f %}
+            {% for field in f.visible_fields %}
               <div class="form-group mb-4">
                 {{ field.label_tag }}
                 {{ field }}
@@ -61,7 +73,21 @@
         {% endfor %}
       {% endfor %}
     {% endif %}
-    <button type="submit" class="btn btn-primary">Siguiente</button>
+    <div class="mt-4 relative">
+      <button id="next-button" type="submit" class="btn btn-primary">
+        Siguiente
+      </button>
+      <span id="loading-spinner" class="hidden absolute inset-y-0 right-0 flex items-center mr-3">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      </span>
+    </div>
   </form>
 </div>
+<script>
+  document.getElementById('wizard-form').addEventListener('submit', function () {
+    const btn = document.getElementById('next-button');
+    btn.disabled = true;
+    document.getElementById('loading-spinner').classList.remove('hidden');
+  });
+</script>
 {% endblock %}
