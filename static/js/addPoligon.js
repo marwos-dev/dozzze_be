@@ -1,9 +1,3 @@
-// Ensure OpenLayers interprets coordinates as [lon, lat]
-(function () {
-    if (window.ol && ol.proj && typeof ol.proj.useGeographic === "function") {
-        ol.proj.useGeographic();
-    }
-})();
 
 function addPolygonToMap(zoneId, map = window.map) {
     fetch(`/api/zones/${zoneId}/polygon`, {
@@ -52,6 +46,10 @@ function addPolygonToMap(zoneId, map = window.map) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    if (window.ol && ol.proj && typeof ol.proj.useGeographic === "function") {
+        ol.proj.useGeographic();
+    }
+
     const zoneSelect = document.querySelector("#id_zone");
     const geodjangoWidget = window.geodjango_location;
     if (!zoneSelect || !geodjangoWidget) {
