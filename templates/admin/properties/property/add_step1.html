@@ -1,4 +1,17 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/map_solution.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ form.media }}
+<script src="{% static 'js/addPoligon.js' %}"></script>
+{% endblock %}
+
 {% block content %}
 <h1>Crear Propiedad - Paso 1 de 4</h1>
 <form method="post" enctype="multipart/form-data">
