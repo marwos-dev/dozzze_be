@@ -1,5 +1,7 @@
 from django.contrib import admin, messages
 from django.contrib.gis.admin import GISModelAdmin
+from django.contrib.gis.geos import Point
+from geopy.geocoders import Nominatim
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -154,6 +156,25 @@ class PropertyAdmin(GISModelAdmin):
                 prop = form.save(commit=False)
                 prop.owner = request.user
                 prop.save()
+
+                try:
+                    address = f"{prop.address}, {prop.zone.name if prop.zone else ''}"
+                    geolocator = Nominatim(user_agent="dozzze_admin")
+                    location = geolocator.geocode(address)
+                    if location:
+                        prop.location = Point(location.longitude, location.latitude)
+                    else:
+                        prop.location = Point(0, 0)
+                    prop.save(update_fields=["location"])
+                except Exception as exc:
+                    prop.location = Point(0, 0)
+                    prop.save(update_fields=["location"])
+                    self.message_user(
+                        request,
+                        "No se pudo geolocalizar la propiedad automáticamente.",
+                        level=messages.WARNING,
+                    )
+
                 request.session["new_property_id"] = prop.pk
                 return HttpResponseRedirect(
                     reverse("admin:properties_property_add_step", args=[2])

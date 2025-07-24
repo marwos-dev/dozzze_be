@@ -11,7 +11,6 @@ class PropertyStepForm(forms.ModelForm):
             "description",
             "zone",
             "address",
-            "location",
             "cover_image",
             "pms",
             "use_pms_information",

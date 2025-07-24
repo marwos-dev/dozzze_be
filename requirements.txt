@@ -63,3 +63,4 @@ wcwidth==0.2.13
 whitenoise==6.9.0
 zipp==3.23.0
 django-formtools==2.4
+geopy==2.4.1
