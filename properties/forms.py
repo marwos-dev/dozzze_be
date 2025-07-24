@@ -5,6 +5,11 @@ from .models import Property, PmsDataProperty, CommunicationMethod, PropertyImag
 
 
 class PropertyStepOneForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control")
+
     class Meta:
         model = Property
         fields = [
@@ -16,6 +21,11 @@ class PropertyStepOneForm(forms.ModelForm):
 
 
 class PmsDataForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control")
+
     class Meta:
         model = PmsDataProperty
         fields = [
@@ -30,6 +40,11 @@ class PmsDataForm(forms.ModelForm):
 
 
 class CommunicationMethodForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("class", "form-control")
+
     class Meta:
         model = CommunicationMethod
         fields = ["name", "value"]

@@ -5,17 +5,43 @@
   <h1 class="text-2xl mb-4">{{ title }}</h1>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {% if form %}{{ form.as_p }}{% endif %}
+    {% if form %}
+      {% for field in form %}
+        <div class="form-group mb-4">
+          {{ field.label_tag }}
+          {{ field }}
+          {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+    {% endif %}
     {% if forms %}
       {% for fr in forms %}
-        {{ fr.as_p }}
+        {% for field in fr %}
+          <div class="form-group mb-4">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {{ field.errors }}
+          </div>
+        {% endfor %}
       {% endfor %}
     {% endif %}
     {% if formset %}
       {{ formset.management_form }}
       {% for f in formset.forms %}
         <div class="border p-2 mb-2">
-          {{ f.as_p }}
+          {% for field in f %}
+            <div class="form-group mb-4">
+              {{ field.label_tag }}
+              {{ field }}
+              {{ field.errors }}
+            </div>
+          {% endfor %}
         </div>
       {% endfor %}
     {% endif %}
@@ -24,7 +50,13 @@
         {{ fs.management_form }}
         {% for f in fs.forms %}
           <div class="border p-2 mb-2">
-            {{ f.as_p }}
+            {% for field in f %}
+              <div class="form-group mb-4">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+              </div>
+            {% endfor %}
           </div>
         {% endfor %}
       {% endfor %}
