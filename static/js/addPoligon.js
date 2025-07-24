@@ -56,6 +56,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const map = geodjangoWidget.map;
+    if (map && ol && ol.layer && ol.source && ol.source.OSM) {
+        const osmLayer = new ol.layer.Tile({ source: new ol.source.OSM() });
+        map.getLayers().setAt(0, osmLayer);
+    }
     const zoneId = zoneSelect.value;
     if (zoneId) {
         addPolygonToMap(zoneId, map);
