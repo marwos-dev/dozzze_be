@@ -5,6 +5,14 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
+from django.shortcuts import redirect, get_object_or_404
+
+from .forms import (
+    CommunicationMethodFormSet,
+    PmsDataForm,
+    PropertyImageFormSet,
+    PropertyStepOneForm,
+)
 
 from pms.utils.property_helper_factory import PMSHelperFactory
 from properties.admin_utils.inlines import (
@@ -72,6 +80,11 @@ class PropertyAdmin(GISModelAdmin):
         }
     }
 
+    def add_view(self, request, form_url="", extra_context=None):
+        if request.user.is_staff and not request.user.is_superuser:
+            return redirect("admin:property_wizard")
+        return super().add_view(request, form_url, extra_context)
+
     def save_model(self, request, obj, form, change):
         if not change or not obj.owner_id:
             obj.owner = request.user
@@ -122,6 +135,11 @@ class PropertyAdmin(GISModelAdmin):
                 "dashboard/",
                 self.admin_site.admin_view(self.dashboard_view),
                 name="properties_dashboard",
+            ),
+            path(
+                "wizard/",
+                self.admin_site.admin_view(self.wizard_view),
+                name="property_wizard",
             ),
         ]
         return custom_urls + urls
@@ -283,6 +301,63 @@ class PropertyAdmin(GISModelAdmin):
         return super().change_view(
             request, object_id, form_url, extra_context=extra_context
         )
+
+    def wizard_view(self, request):
+        step = int(request.GET.get("step", 1))
+        property_id = request.session.get("wizard_property_id")
+
+        if step == 1:
+            form = PropertyStepOneForm(request.POST or None)
+            pms_form = PmsDataForm(request.POST or None)
+            if request.method == "POST" and form.is_valid() and pms_form.is_valid():
+                prop = form.save(commit=False)
+                prop.owner = request.user
+                prop.location = "POINT(0 0)"
+                prop.save()
+                pms = pms_form.save(commit=False)
+                pms.property = prop
+                pms.save()
+                # sincroniza pms
+                self.perform_pms_sync(request, prop)
+                request.session["wizard_property_id"] = prop.pk
+                return redirect(f"{reverse('admin:property_wizard')}?step=2")
+            context = {
+                "title": "Nueva Propiedad - Paso 1",
+                "form": form,
+                "forms": [pms_form],
+            }
+            return TemplateResponse(
+                request,
+                "admin/properties/property/wizard_step.html",
+                context,
+            )
+
+        if step == 2 and property_id:
+            prop = get_object_or_404(Property, pk=property_id)
+            cm_formset = CommunicationMethodFormSet(
+                request.POST or None, instance=prop
+            )
+            img_formset = PropertyImageFormSet(
+                request.POST or None, request.FILES or None, instance=prop
+            )
+            if request.method == "POST" and cm_formset.is_valid() and img_formset.is_valid():
+                cm_formset.save()
+                img_formset.save()
+                del request.session["wizard_property_id"]
+                return redirect(
+                    reverse("admin:properties_property_change", args=[prop.pk])
+                )
+            context = {
+                "title": "Nueva Propiedad - Paso 2",
+                "formsets": [cm_formset, img_formset],
+            }
+            return TemplateResponse(
+                request,
+                "admin/properties/property/wizard_step.html",
+                context,
+            )
+
+        return redirect("admin:index")
 
     def dashboard_view(self, request):
         from django.db.models import Sum

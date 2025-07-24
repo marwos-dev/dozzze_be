@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<div class="container mx-auto max-w-2xl">
+  <h1 class="text-2xl mb-4">{{ title }}</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form %}{{ form.as_p }}{% endif %}
+    {% if forms %}
+      {% for fr in forms %}
+        {{ fr.as_p }}
+      {% endfor %}
+    {% endif %}
+    {% if formset %}
+      {{ formset.management_form }}
+      {% for f in formset.forms %}
+        <div class="border p-2 mb-2">
+          {{ f.as_p }}
+        </div>
+      {% endfor %}
+    {% endif %}
+    {% if formsets %}
+      {% for fs in formsets %}
+        {{ fs.management_form }}
+        {% for f in fs.forms %}
+          <div class="border p-2 mb-2">
+            {{ f.as_p }}
+          </div>
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Siguiente</button>
+  </form>
+</div>
+{% endblock %}
