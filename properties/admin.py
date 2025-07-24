@@ -1,5 +1,5 @@
 from django.contrib import admin, messages
-from django.contrib.gis.admin import OSMGeoAdmin
+from django.contrib.gis.admin import GISModelAdmin
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
@@ -30,7 +30,7 @@ from .sync_service import SyncService
 
 
 @admin.register(Property)
-class PropertyAdmin(OSMGeoAdmin):
+class PropertyAdmin(GISModelAdmin):
     class Media:
         js = ("js/addPoligon.js",)
         css = {"all": ("css/map_solution.css",)}
