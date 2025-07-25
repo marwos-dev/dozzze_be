@@ -44,3 +44,11 @@ The frontend can map these codes to custom messages for the user.
 | Code | Meaning |
 |------|---------|
 |400|Access denied|
+
+## Zone Errors (500-599)
+
+| Code | Meaning |
+|------|---------|
+|500|Zone not found|
+|501|Invalid zone ID|
+|502|Zone polygon area too large|

@@ -19,8 +19,13 @@ class FnsPropertyHelper(BasePropertyHelper):
         super().__init__(prop)
         self.api_auth = AuthApi()
         self.property = prop
-        if hasattr(prop, "pms_data") and prop.pms_data:
-            self.setup_api_client(prop)
+        if hasattr(prop, "pms_data"):
+            try:
+                if prop.pms_data:
+                    self.setup_api_client(prop)
+            except Exception:
+                # PMS data might not exist during tests or initial setup
+                pass
 
     def setup_api_client(self, prop: Property = None):
         """Initialize the FNSROOMS API client"""
