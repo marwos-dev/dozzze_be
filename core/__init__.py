@@ -1,6 +1,7 @@
 # myproject/__init__.py
-from core.celery import app as celery_app
 from django.contrib import admin
+
+from core.celery import app as celery_app
 
 
 def _superuser_only(self, request):

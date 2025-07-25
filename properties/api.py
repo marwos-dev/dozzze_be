@@ -10,21 +10,22 @@ from ninja.throttling import UserRateThrottle
 
 from pms.models import PMS
 from pms.utils.property_helper_factory import PMSHelperFactory
-from zones.models import Zone
 from utils import (
     APIError,
     ErrorSchema,
     PropertyErrorCode,
     SecurityErrorCode,
     SuccessSchema,
+    ZoneErrorCode,
 )
 from utils.auth_bearer import AuthBearer
+from zones.models import Zone
 
 from .models import (
     Availability,
+    PmsDataProperty,
     Property,
     PropertyImage,
-    PmsDataProperty,
     Room,
     RoomType,
     RoomTypeImage,
@@ -286,7 +287,9 @@ def create_property(request, data: PropertyIn):
     if Property.objects.filter(
         owner=request.user, name=data.name, address=data.address
     ).exists():
-        raise APIError("Property already exists", PropertyErrorCode.PROPERTY_NOT_FOUND, 400)
+        raise APIError(
+            "Property already exists", PropertyErrorCode.PROPERTY_NOT_FOUND, 400
+        )
 
     prop = Property.objects.create(
         owner=request.user,
@@ -325,8 +328,14 @@ def update_property(request, property_id: int, data: PropertyUpdateIn):
 
     new_name = payload.get("name", prop.name)
     new_addr = payload.get("address", prop.address)
-    if Property.objects.filter(owner=request.user, name=new_name, address=new_addr).exclude(id=prop.id).exists():
-        raise APIError("Property already exists", PropertyErrorCode.PROPERTY_NOT_FOUND, 400)
+    if (
+        Property.objects.filter(owner=request.user, name=new_name, address=new_addr)
+        .exclude(id=prop.id)
+        .exists()
+    ):
+        raise APIError(
+            "Property already exists", PropertyErrorCode.PROPERTY_NOT_FOUND, 400
+        )
 
     lat = payload.pop("latitude", None)
     lon = payload.pop("longitude", None)
@@ -338,7 +347,11 @@ def update_property(request, property_id: int, data: PropertyUpdateIn):
     return prop
 
 
-@router.delete("/my/{property_id}", response={200: SuccessSchema, 404: ErrorSchema}, auth=AuthBearer())
+@router.delete(
+    "/my/{property_id}",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
 def delete_property(request, property_id: int):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -349,7 +362,11 @@ def delete_property(request, property_id: int):
     return SuccessSchema(message="Property deleted")
 
 
-@router.get("/my/{property_id}/pms-data", response={200: PmsDataPropertyOut, 404: ErrorSchema}, auth=AuthBearer())
+@router.get(
+    "/my/{property_id}/pms-data",
+    response={200: PmsDataPropertyOut, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
 def get_pms_data(request, property_id: int):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -362,7 +379,9 @@ def get_pms_data(request, property_id: int):
         raise APIError("PMS data not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
-@router.post("/my/{property_id}/pms-data", response=PmsDataPropertyOut, auth=AuthBearer())
+@router.post(
+    "/my/{property_id}/pms-data", response=PmsDataPropertyOut, auth=AuthBearer()
+)
 def create_pms_data(request, property_id: int, data: PmsDataPropertyIn):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -376,7 +395,9 @@ def create_pms_data(request, property_id: int, data: PmsDataPropertyIn):
     return pms_data
 
 
-@router.put("/my/{property_id}/pms-data", response=PmsDataPropertyOut, auth=AuthBearer())
+@router.put(
+    "/my/{property_id}/pms-data", response=PmsDataPropertyOut, auth=AuthBearer()
+)
 def update_pms_data(request, property_id: int, data: PmsDataPropertyIn):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -393,7 +414,9 @@ def update_pms_data(request, property_id: int, data: PmsDataPropertyIn):
     return pms_data
 
 
-@router.get("/my/{property_id}/images", response=List[PropertyImageOut], auth=AuthBearer())
+@router.get(
+    "/my/{property_id}/images", response=List[PropertyImageOut], auth=AuthBearer()
+)
 def list_property_images(request, property_id: int):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -404,17 +427,28 @@ def list_property_images(request, property_id: int):
 
 
 @router.post("/my/{property_id}/images", response=PropertyImageOut, auth=AuthBearer())
-def add_property_image(request, property_id: int, image: UploadedFile = File(...), caption: str = Form(None)):
+def add_property_image(
+    request,
+    property_id: int,
+    image: UploadedFile = File(...),
+    caption: str = Form(None),
+):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
     prop = Property.objects.filter(id=property_id, owner=request.user).first()
     if not prop:
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
-    img = PropertyImage.objects.create(property=prop, image=image, caption=caption or "")
+    img = PropertyImage.objects.create(
+        property=prop, image=image, caption=caption or ""
+    )
     return img
 
 
-@router.delete("/my/{property_id}/images/{image_id}", response={200: SuccessSchema, 404: ErrorSchema}, auth=AuthBearer())
+@router.delete(
+    "/my/{property_id}/images/{image_id}",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
 def delete_property_image(request, property_id: int, image_id: int):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -429,7 +463,11 @@ def delete_property_image(request, property_id: int, image_id: int):
     return SuccessSchema(message="Image deleted")
 
 
-@router.get("/my/room-types/{room_type_id}/images", response=List[RoomTypeImageOut], auth=AuthBearer())
+@router.get(
+    "/my/room-types/{room_type_id}/images",
+    response=List[RoomTypeImageOut],
+    auth=AuthBearer(),
+)
 def list_room_type_images(request, room_type_id: int):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -439,7 +477,9 @@ def list_room_type_images(request, room_type_id: int):
     return list(rt.images.all())
 
 
-@router.post("/my/room-types/{room_type_id}/images", response=RoomTypeImageOut, auth=AuthBearer())
+@router.post(
+    "/my/room-types/{room_type_id}/images", response=RoomTypeImageOut, auth=AuthBearer()
+)
 def add_room_type_image(request, room_type_id: int, image: UploadedFile = File(...)):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
@@ -450,7 +490,11 @@ def add_room_type_image(request, room_type_id: int, image: UploadedFile = File(.
     return img
 
 
-@router.post("/my/{property_id}/sync", response={200: SuccessSchema, 404: ErrorSchema}, auth=AuthBearer())
+@router.post(
+    "/my/{property_id}/sync",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
 def sync_property_with_pms(request, property_id: int):
     """Synchronize a property with its PMS."""
     if not request.user.is_staff:
@@ -463,7 +507,9 @@ def sync_property_with_pms(request, property_id: int):
     try:
         helper = PMSHelperFactory().get_helper(prop)
     except Exception:
-        raise APIError("PMS helper not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+        raise APIError(
+            "PMS helper not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+        )
 
     SyncService.sync_property_detail(prop, helper)
     SyncService.sync_rooms(prop, helper)
@@ -480,4 +526,3 @@ def sync_property_with_pms(request, property_id: int):
         pms_data.save()
 
     return SuccessSchema(message="Synchronization completed")
-
