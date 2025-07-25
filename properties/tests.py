@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reservations.models import Reservation
 
 from .models import Property, Room, RoomType
+from pms.models import PMS
 
 User = get_user_model()
 
@@ -56,13 +57,14 @@ class PropertyAPITest(TestCase):
             password="pass",
             is_staff=True,
         )
+        self.pms = PMS.objects.create(name="Test PMS")
         self.property = Property.objects.create(
             owner=self.staff,
             name="APITestProp",
             description="Desc",
             address="Somewhere",
             location="POINT(0 0)",
-            pms_id=1,
+            pms=self.pms,
         )
         token = AccessToken.for_user(self.staff)
         self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
