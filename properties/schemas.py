@@ -171,3 +171,70 @@ class AvailabilityRequest(Schema):
 class AvailabilityResponse(Schema):
     rooms: List[RoomAvailability]
     total_price_per_room_type: Optional[dict] = None
+
+
+class PropertyIn(Schema):
+    name: str
+    description: str
+    address: str
+    latitude: float
+    longitude: float
+    zone_id: Optional[int] = None
+    pms_id: Optional[int] = None
+    use_pms_information: Optional[bool] = False
+
+
+class PropertyUpdateIn(Schema):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    zone_id: Optional[int] = None
+    pms_id: Optional[int] = None
+    use_pms_information: Optional[bool] = None
+
+
+class PropertyImageOut(Schema):
+    id: int
+    image: str
+    caption: Optional[str] = None
+
+    @staticmethod
+    def resolve_image(obj):
+        return generate_presigned_url(obj.image.name)
+
+
+class RoomTypeImageOut(Schema):
+    id: int
+    image: str
+
+    @staticmethod
+    def resolve_image(obj):
+        return generate_presigned_url(obj.image.name)
+
+
+class PmsDataPropertyIn(Schema):
+    base_url: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    pms_token: Optional[str] = None
+    pms_hotel_identifier: Optional[str] = None
+    pms_username: Optional[str] = None
+    pms_password: Optional[str] = None
+    pms_property_id: Optional[int] = None
+    pms_property_name: Optional[str] = None
+    pms_property_address: Optional[str] = None
+    pms_property_city: Optional[str] = None
+    pms_property_province: Optional[str] = None
+    pms_property_postal_code: Optional[str] = None
+    pms_property_country: Optional[str] = None
+    pms_property_latitude: Optional[float] = None
+    pms_property_longitude: Optional[float] = None
+    pms_property_phone: Optional[str] = None
+    pms_property_category: Optional[str] = None
+    first_sync: Optional[bool] = None
+
+
+class PmsDataPropertyOut(PmsDataPropertyIn):
+    id: int

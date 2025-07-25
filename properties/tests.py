@@ -1,7 +1,10 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
+from django.urls import reverse
+from rest_framework_simplejwt.tokens import AccessToken
 
 from reservations.models import Reservation
 
@@ -43,3 +46,58 @@ class PropertyModelTest(TestCase):
         )
         self.room.reservations.add(Reservation.objects.first())
         self.assertFalse(self.room.is_available(start, end))
+
+
+class PropertyAPITest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.staff = User.objects.create_user(
+            username="staff",
+            password="pass",
+            is_staff=True,
+        )
+        self.property = Property.objects.create(
+            owner=self.staff,
+            name="APITestProp",
+            description="Desc",
+            address="Somewhere",
+            location="POINT(0 0)",
+        )
+        token = AccessToken.for_user(self.staff)
+        self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+
+    def test_list_my_properties(self):
+        response = self.client.get("/api/properties/my/")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], self.property.id)
+
+    def test_create_property(self):
+        payload = {
+            "name": "New Prop",
+            "description": "d",
+            "address": "addr",
+            "latitude": 0.0,
+            "longitude": 0.0,
+        }
+        response = self.client.post(
+            "/api/properties/my/",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Property.objects.count(), 2)
+
+    def test_sync_property(self):
+        with patch("properties.api.SyncService.sync_property_detail", return_value=True), patch(
+            "properties.api.SyncService.sync_rooms", return_value=True
+        ), patch(
+            "properties.api.SyncService.sync_reservations", return_value=True
+        ), patch(
+            "properties.api.SyncService.sync_rates_and_availability", return_value=True
+        ):
+            response = self.client.post(f"/api/properties/my/{self.property.id}/sync")
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("message", response.json())
+
