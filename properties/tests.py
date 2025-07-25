@@ -9,6 +9,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reservations.models import Reservation
 
 from .models import Property, Room, RoomType
+from zones.models import Zone
 from pms.models import PMS
 
 User = get_user_model()
@@ -57,6 +58,7 @@ class PropertyAPITest(TestCase):
             password="pass",
             is_staff=True,
         )
+        self.zone = Zone.objects.create(name="Zone", description="desc")
         self.pms = PMS.objects.create(name="Test PMS")
         self.property = Property.objects.create(
             owner=self.staff,
@@ -65,6 +67,7 @@ class PropertyAPITest(TestCase):
             address="Somewhere",
             location="POINT(0 0)",
             pms=self.pms,
+            zone=self.zone,
         )
         token = AccessToken.for_user(self.staff)
         self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
@@ -92,6 +95,53 @@ class PropertyAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Property.objects.count(), 2)
 
+    def test_create_property_invalid_zone(self):
+        payload = {
+            "name": "Bad",
+            "description": "d",
+            "address": "addr2",
+            "latitude": 0.0,
+            "longitude": 0.0,
+            "zone_id": 9999,
+        }
+        response = self.client.post(
+            "/api/properties/my/",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_create_property_invalid_pms(self):
+        payload = {
+            "name": "BadPMS",
+            "description": "d",
+            "address": "addr3",
+            "latitude": 0.0,
+            "longitude": 0.0,
+            "pms_id": 9999,
+        }
+        response = self.client.post(
+            "/api/properties/my/",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_create_property_duplicate(self):
+        payload = {
+            "name": "APITestProp",
+            "description": "Desc",
+            "address": "Somewhere",
+            "latitude": 0.0,
+            "longitude": 0.0,
+        }
+        response = self.client.post(
+            "/api/properties/my/",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_sync_property(self):
         with patch("properties.api.SyncService.sync_property_detail", return_value=True), patch(
             "properties.api.SyncService.sync_rooms", return_value=True
@@ -103,4 +153,31 @@ class PropertyAPITest(TestCase):
             response = self.client.post(f"/api/properties/my/{self.property.id}/sync")
             self.assertEqual(response.status_code, 200)
             self.assertIn("message", response.json())
+
+    def test_update_property_invalid_zone(self):
+        payload = {"zone_id": 9999}
+        response = self.client.put(
+            f"/api/properties/my/{self.property.id}",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_property_duplicate(self):
+        other = Property.objects.create(
+            owner=self.staff,
+            name="Other",
+            description="d",
+            address="Addr",
+            location="POINT(0 0)",
+            zone=self.zone,
+            pms=self.pms,
+        )
+        payload = {"name": other.name, "address": other.address}
+        response = self.client.put(
+            f"/api/properties/my/{self.property.id}",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
 

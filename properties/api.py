@@ -8,7 +8,9 @@ from ninja import File, Form, Query, Router
 from ninja.files import UploadedFile
 from ninja.throttling import UserRateThrottle
 
+from pms.models import PMS
 from pms.utils.property_helper_factory import PMSHelperFactory
+from zones.models import Zone
 from utils import (
     APIError,
     ErrorSchema,
@@ -267,14 +269,33 @@ def my_properties(request):
 def create_property(request, data: PropertyIn):
     if not request.user.is_staff:
         raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+    if data.zone_id is not None:
+        zone = Zone.objects.filter(id=data.zone_id).first()
+        if not zone:
+            raise APIError("Zone not found", ZoneErrorCode.INVALID_ZONE_ID, 404)
+    else:
+        zone = None
+
+    if data.pms_id is not None:
+        pms = PMS.objects.filter(id=data.pms_id).first()
+        if not pms:
+            raise APIError("PMS not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+    else:
+        pms = None
+
+    if Property.objects.filter(
+        owner=request.user, name=data.name, address=data.address
+    ).exists():
+        raise APIError("Property already exists", PropertyErrorCode.PROPERTY_NOT_FOUND, 400)
+
     prop = Property.objects.create(
         owner=request.user,
         name=data.name,
         description=data.description,
         address=data.address,
         location=Point(data.longitude, data.latitude),
-        zone_id=data.zone_id,
-        pms_id=data.pms_id,
+        zone=zone,
+        pms=pms,
         use_pms_information=data.use_pms_information,
     )
     return prop
@@ -289,6 +310,24 @@ def update_property(request, property_id: int, data: PropertyUpdateIn):
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
     payload = data.dict(exclude_unset=True)
+
+    if "zone_id" in payload:
+        zone = Zone.objects.filter(id=payload.pop("zone_id")).first()
+        if not zone:
+            raise APIError("Zone not found", ZoneErrorCode.INVALID_ZONE_ID, 404)
+        prop.zone = zone
+
+    if "pms_id" in payload:
+        pms = PMS.objects.filter(id=payload.pop("pms_id")).first()
+        if not pms:
+            raise APIError("PMS not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+        prop.pms = pms
+
+    new_name = payload.get("name", prop.name)
+    new_addr = payload.get("address", prop.address)
+    if Property.objects.filter(owner=request.user, name=new_name, address=new_addr).exclude(id=prop.id).exists():
+        raise APIError("Property already exists", PropertyErrorCode.PROPERTY_NOT_FOUND, 400)
+
     lat = payload.pop("latitude", None)
     lon = payload.pop("longitude", None)
     for attr, value in payload.items():
