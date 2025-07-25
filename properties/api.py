@@ -4,7 +4,13 @@ from ninja import File, Form, Query, Router
 from ninja.files import UploadedFile
 from ninja.throttling import UserRateThrottle
 
-from utils import APIError, ErrorSchema, PropertyErrorCode, SecurityErrorCode, SuccessSchema
+from utils import (
+    APIError,
+    ErrorSchema,
+    PropertyErrorCode,
+    SecurityErrorCode,
+    SuccessSchema,
+)
 from utils.auth_bearer import AuthBearer
 
 from .models import Property, Room
@@ -17,7 +23,6 @@ from .schemas import (
     PropertyIn,
     PropertyOut,
     PropertyUpdateIn,
-    RoomAvailability,
     RoomOut,
     RoomTypeImageOut,
 )

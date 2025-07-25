@@ -1,6 +1,6 @@
 # New service file for property related operations
-from collections import defaultdict
 import json
+from collections import defaultdict
 from datetime import timedelta
 from typing import List, Optional
 
@@ -22,7 +22,6 @@ from .models import (
     PmsDataProperty,
     Property,
     PropertyImage,
-    Room,
     RoomType,
     RoomTypeImage,
 )
@@ -63,7 +62,9 @@ class PropertyService:
 
         property_obj = None
         if data.property_id:
-            property_obj = Property.objects.filter(id=data.property_id, active=True).first()
+            property_obj = Property.objects.filter(
+                id=data.property_id, active=True
+            ).first()
             if not property_obj:
                 raise APIError(
                     "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
@@ -160,7 +161,9 @@ class PropertyService:
             if not valid_totals:
                 continue
 
-            total_price_per_room_type[f"{room_type_name}-guests:{data.guests}"] = valid_totals
+            total_price_per_room_type[f"{room_type_name}-guests:{data.guests}"] = (
+                valid_totals
+            )
 
         if not rooms_availability:
             raise APIError(
@@ -188,7 +191,9 @@ class PropertyService:
         if data.pms_id is not None:
             pms = PMS.objects.filter(id=data.pms_id).first()
             if not pms:
-                raise APIError("PMS not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+                raise APIError(
+                    "PMS not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+                )
 
         if Property.objects.filter(
             owner=user, name=data.name, address=data.address
@@ -215,7 +220,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
 
         payload = data.dict(exclude_unset=True)
 
@@ -228,7 +235,9 @@ class PropertyService:
         if "pms_id" in payload:
             pms = PMS.objects.filter(id=payload.pop("pms_id")).first()
             if not pms:
-                raise APIError("PMS not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+                raise APIError(
+                    "PMS not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+                )
             prop.pms = pms
 
         new_name = payload.get("name", prop.name)
@@ -257,7 +266,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         prop.delete()
         return SuccessSchema(message="Property deleted")
 
@@ -267,11 +278,15 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         try:
             return prop.pms_data
         except PmsDataProperty.DoesNotExist:
-            raise APIError("PMS data not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "PMS data not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
 
     @staticmethod
     def create_pms_data(user, property_id: int, data: PmsDataPropertyIn):
@@ -279,7 +294,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         pms_data, _ = PmsDataProperty.objects.get_or_create(property=prop)
         for attr, value in data.dict(exclude_unset=True).items():
             setattr(pms_data, attr, value)
@@ -292,11 +309,15 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         try:
             pms_data = prop.pms_data
         except PmsDataProperty.DoesNotExist:
-            raise APIError("PMS data not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "PMS data not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         for attr, value in data.dict(exclude_unset=True).items():
             setattr(pms_data, attr, value)
         pms_data.save()
@@ -308,7 +329,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         return list(prop.gallery.all())
 
     @staticmethod
@@ -317,7 +340,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         img = PropertyImage.objects.create(
             property=prop, image=image, caption=caption or ""
         )
@@ -329,7 +354,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
         try:
             img = PropertyImage.objects.get(id=image_id, property=prop)
         except PropertyImage.DoesNotExist:
@@ -363,7 +390,9 @@ class PropertyService:
 
         prop = Property.objects.filter(id=property_id, owner=user).first()
         if not prop:
-            raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
 
         try:
             helper = PMSHelperFactory().get_helper(prop)
