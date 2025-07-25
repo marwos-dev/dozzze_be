@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reservations.models import Reservation
 
-from .models import Property, Room, RoomType
+from .models import Property, Room, RoomType, PmsDataProperty
 from zones.models import Zone
 from pms.models import PMS
 
@@ -143,7 +143,10 @@ class PropertyAPITest(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_sync_property(self):
-        with patch("properties.api.SyncService.sync_property_detail", return_value=True), patch(
+        pms_data = PmsDataProperty.objects.create(property=self.property)
+        with patch(
+            "properties.api.SyncService.sync_property_detail", return_value=True
+        ), patch(
             "properties.api.SyncService.sync_rooms", return_value=True
         ), patch(
             "properties.api.SyncService.sync_reservations", return_value=True
@@ -153,6 +156,8 @@ class PropertyAPITest(TestCase):
             response = self.client.post(f"/api/properties/my/{self.property.id}/sync")
             self.assertEqual(response.status_code, 200)
             self.assertIn("message", response.json())
+        pms_data.refresh_from_db()
+        self.assertFalse(pms_data.first_sync)
 
     def test_update_property_invalid_zone(self):
         payload = {"zone_id": 9999}
