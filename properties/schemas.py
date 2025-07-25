@@ -90,8 +90,8 @@ class TermsAndConditionsOut(Schema):
 class PropertyOut(Schema):
     id: int
     name: str
-    zone: str
-    zone_id: int
+    zone: Optional[str] = None
+    zone_id: Optional[int] = None
     description: str
 
     address: str
@@ -106,7 +106,7 @@ class PropertyOut(Schema):
 
     @staticmethod
     def resolve_zone(obj):
-        return obj.zone.name
+        return obj.zone.name if obj.zone else None
 
     @staticmethod
     def resolve_images(obj):

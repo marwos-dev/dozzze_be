@@ -62,6 +62,7 @@ class PropertyAPITest(TestCase):
             description="Desc",
             address="Somewhere",
             location="POINT(0 0)",
+            pms_id=1,
         )
         token = AccessToken.for_user(self.staff)
         self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"

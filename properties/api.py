@@ -431,9 +431,14 @@ def sync_property_with_pms(request, property_id: int):
     SyncService.sync_reservations(prop, helper, request.user)
     SyncService.sync_rates_and_availability(prop, helper)
 
-    if prop.pms_data and prop.pms_data.first_sync:
-        prop.pms_data.first_sync = False
-        prop.pms_data.save()
+    try:
+        pms_data = prop.pms_data
+    except PmsDataProperty.DoesNotExist:
+        pms_data = None
+
+    if pms_data and pms_data.first_sync:
+        pms_data.first_sync = False
+        pms_data.save()
 
     return SuccessSchema(message="Synchronization completed")
 
