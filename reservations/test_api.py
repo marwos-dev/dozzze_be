@@ -94,14 +94,20 @@ class ReservationAPITest(TestCase):
         )
         payload = self._payload(80)
         payload["voucher_code"] = voucher.code
-        with patch("utils.redsys.RedsysService.prepare_payment_for_group", return_value={"ok": True}) as mock_pay:
+        payment_data = {
+            "endpoint": "http://pay",
+            "Ds_SignatureVersion": "1",
+            "Ds_MerchantParameters": "params",
+            "Ds_Signature": "sig",
+        }
+        with patch("utils.redsys.RedsysService.prepare_payment_for_group", return_value=payment_data) as mock_pay:
             response = self.client.post(
                 "/api/reservations/",
                 data=json.dumps(payload),
                 content_type="application/json",
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["redsys_args"], {"ok": True})
+        self.assertEqual(response.json()["redsys_args"], payment_data)
         reservation = Reservation.objects.get()
         reservation.refresh_from_db()
         self.assertEqual(reservation.status, Reservation.PENDING)
@@ -122,14 +128,20 @@ class ReservationAPITest(TestCase):
         )
         payload = self._payload(100)
         payload["coupon_code"] = coupon.code
-        with patch("utils.redsys.RedsysService.prepare_payment_for_group", return_value={"ok": True}) as mock_pay:
+        payment_data = {
+            "endpoint": "http://pay",
+            "Ds_SignatureVersion": "1",
+            "Ds_MerchantParameters": "params",
+            "Ds_Signature": "sig",
+        }
+        with patch("utils.redsys.RedsysService.prepare_payment_for_group", return_value=payment_data) as mock_pay:
             response = self.client.post(
                 "/api/reservations/",
                 data=json.dumps(payload),
                 content_type="application/json",
             )
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["redsys_args"], {"ok": True})
+        self.assertEqual(response.json()["redsys_args"], payment_data)
         reservation = Reservation.objects.get()
         reservation.refresh_from_db()
         self.assertEqual(float(reservation.total_price), 90)
