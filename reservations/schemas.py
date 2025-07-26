@@ -57,7 +57,7 @@ class RedsysSchemaOut(Schema):
 
 class ReservationOut(Schema):
     success: bool
-    redsys_args: RedsysSchemaOut
+    redsys_args: Optional[RedsysSchemaOut] = None
 
 
 class RoomReservationSchema(Schema):
