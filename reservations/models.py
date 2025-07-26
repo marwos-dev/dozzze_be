@@ -151,9 +151,9 @@ class Reservation(models.Model):
         verbose_name="Pay on arrival", null=True, blank=True
     )
     discount_coupon = models.ForeignKey(
-        'vouchers.DiscountCoupon',
+        "vouchers.DiscountCoupon",
         on_delete=models.SET_NULL,
-        related_name='reservations',
+        related_name="reservations",
         null=True,
         blank=True,
     )

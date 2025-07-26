@@ -7,8 +7,12 @@ User = get_user_model()
 class Voucher(models.Model):
     code = models.CharField("Código", max_length=20, unique=True)
     amount = models.DecimalField("Monto original", max_digits=10, decimal_places=2)
-    remaining_amount = models.DecimalField("Monto restante", max_digits=10, decimal_places=2)
-    created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name="created_vouchers")
+    remaining_amount = models.DecimalField(
+        "Monto restante", max_digits=10, decimal_places=2
+    )
+    created_by = models.ForeignKey(
+        User, on_delete=models.PROTECT, related_name="created_vouchers"
+    )
     active = models.BooleanField("Activo", default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

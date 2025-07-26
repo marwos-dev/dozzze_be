@@ -1,14 +1,15 @@
-from datetime import timedelta
 import json
+from datetime import timedelta
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import AccessToken
-from unittest.mock import patch
 
 from properties.models import Availability, Property, RoomType
-from vouchers.models import Voucher, DiscountCoupon
 from reservations.models import Reservation
+from vouchers.models import DiscountCoupon, Voucher
 
 User = get_user_model()
 
@@ -100,7 +101,10 @@ class ReservationAPITest(TestCase):
             "Ds_MerchantParameters": "params",
             "Ds_Signature": "sig",
         }
-        with patch("utils.redsys.RedsysService.prepare_payment_for_group", return_value=payment_data) as mock_pay:
+        with patch(
+            "utils.redsys.RedsysService.prepare_payment_for_group",
+            return_value=payment_data,
+        ) as mock_pay:
             response = self.client.post(
                 "/api/reservations/",
                 data=json.dumps(payload),
@@ -134,7 +138,10 @@ class ReservationAPITest(TestCase):
             "Ds_MerchantParameters": "params",
             "Ds_Signature": "sig",
         }
-        with patch("utils.redsys.RedsysService.prepare_payment_for_group", return_value=payment_data) as mock_pay:
+        with patch(
+            "utils.redsys.RedsysService.prepare_payment_for_group",
+            return_value=payment_data,
+        ) as mock_pay:
             response = self.client.post(
                 "/api/reservations/",
                 data=json.dumps(payload),

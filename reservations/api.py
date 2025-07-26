@@ -15,15 +15,10 @@ from utils import ErrorSchema, SuccessSchema
 from utils.email_service import EmailService
 from utils.error_codes import APIError, ReservationError, ReservationErrorCode
 from utils.redsys import RedsysService
+from vouchers.models import DiscountCoupon, Voucher
 
 from .models import PaymentNotificationLog, Reservation, ReservationRoom
-from vouchers.models import DiscountCoupon, Voucher
-from .schemas import (
-    ReservationBatchSchema,
-    ReservationClientOut,
-    ReservationOut,
-    ReservationSchema,
-)
+from .schemas import ReservationBatchSchema, ReservationClientOut, ReservationOut
 
 rs = RedsysService()
 router = Router(tags=["reservations"])
@@ -125,7 +120,9 @@ def create_reservation(request, payload: ReservationBatchSchema):
 
                 if coupon_code:
                     try:
-                        coupon = DiscountCoupon.objects.get(code=coupon_code, active=True)
+                        coupon = DiscountCoupon.objects.get(
+                            code=coupon_code, active=True
+                        )
                         reservation.apply_coupon(coupon)
                         descriptions.append(f"Cupon {coupon.name} ({coupon.code})")
                     except DiscountCoupon.DoesNotExist:

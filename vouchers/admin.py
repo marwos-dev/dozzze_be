@@ -12,7 +12,14 @@ class VoucherRedemptionInline(admin.TabularInline):
 
 @admin.register(Voucher)
 class VoucherAdmin(admin.ModelAdmin):
-    list_display = ("code", "amount", "remaining_amount", "active", "created_by", "created_at")
+    list_display = (
+        "code",
+        "amount",
+        "remaining_amount",
+        "active",
+        "created_by",
+        "created_at",
+    )
     search_fields = ("code",)
     readonly_fields = ("created_by", "remaining_amount")
     inlines = [VoucherRedemptionInline]
@@ -26,7 +33,14 @@ class VoucherAdmin(admin.ModelAdmin):
 
 @admin.register(DiscountCoupon)
 class DiscountCouponAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "discount_percent", "active", "created_by", "created_at")
+    list_display = (
+        "code",
+        "name",
+        "discount_percent",
+        "active",
+        "created_by",
+        "created_at",
+    )
     search_fields = ("code", "name")
     readonly_fields = ("created_by",)
 
