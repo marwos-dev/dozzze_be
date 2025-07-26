@@ -63,10 +63,11 @@ def create_reservation(request, payload: ReservationBatchSchema):
                         ReservationErrorCode.NOT_FOUND,
                     ) from exc
 
-                helper = PMSHelperFactory().get_helper(property)
-                SyncService.sync_rates_and_availability(
-                    property, helper, checkin=check_in, checkout=check_out
-                )
+                if property.pms_id:
+                    helper = PMSHelperFactory().get_helper(property)
+                    SyncService.sync_rates_and_availability(
+                        property, helper, checkin=check_in, checkout=check_out
+                    )
 
                 while current_date < check_out:
                     availability = Availability.objects.select_for_update().get(
