@@ -42,6 +42,12 @@ class ReservationSchema(Schema):
     pay_on_arrival: Optional[float] = None
 
 
+class ReservationBatchSchema(Schema):
+    reservations: List[ReservationSchema]
+    voucher_code: Optional[str] = None
+    coupon_code: Optional[str] = None
+
+
 class RedsysSchemaOut(Schema):
     endpoint: str
     Ds_SignatureVersion: str
@@ -51,7 +57,7 @@ class RedsysSchemaOut(Schema):
 
 class ReservationOut(Schema):
     success: bool
-    redsys_args: RedsysSchemaOut
+    redsys_args: Optional[RedsysSchemaOut] = None
 
 
 class RoomReservationSchema(Schema):

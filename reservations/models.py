@@ -150,6 +150,13 @@ class Reservation(models.Model):
     pay_on_arrival = models.FloatField(
         verbose_name="Pay on arrival", null=True, blank=True
     )
+    discount_coupon = models.ForeignKey(
+        "vouchers.DiscountCoupon",
+        on_delete=models.SET_NULL,
+        related_name="reservations",
+        null=True,
+        blank=True,
+    )
 
     # Campos para Redsys
     payment_order = models.CharField(max_length=12, null=True, blank=True)
@@ -175,6 +182,18 @@ class Reservation(models.Model):
     def get_room_types(self):
         room_types = self.reservations.select_related("room_type").all()
         return ", ".join(set(rr.room_type.name for rr in room_types if rr.room_type))
+
+    def apply_coupon(self, coupon):
+        if coupon and coupon.active:
+            discount = float(self.total_price) * float(coupon.discount_percent) / 100
+            self.total_price = float(self.total_price) - discount
+            self.discount_coupon = coupon
+            self.save()
+
+    def apply_voucher(self, voucher, amount):
+        voucher.redeem(amount, reservation=self)
+        self.total_price = float(self.total_price) - float(amount)
+        self.save(update_fields=["total_price"])
 
     def cancel(self):
         """Mark the reservation as pending refund if cancellation is allowed."""

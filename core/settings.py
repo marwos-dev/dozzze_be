@@ -52,6 +52,7 @@ LOCAL_APPS = [
     "zones",
     "pms",
     "customers",
+    "vouchers",
 ]
 
 INSTALLED_APPS += LOCAL_APPS

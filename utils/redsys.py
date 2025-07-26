@@ -78,7 +78,7 @@ class RedsysService:
             return False, f"Error al procesar la notificación: {str(e)}"
 
     def prepare_payment_for_group(
-        self, reservations, total_amount, request, group_payment_order
+        self, reservations, total_amount, request, group_payment_order, description=None
     ):
         titular = (
             reservations[0].guest_name or reservations[0].guest_corporate or "Guest"
@@ -87,6 +87,7 @@ class RedsysService:
 
         amount = Decimal(str(total_amount)).quantize(Decimal(".01"), ROUND_HALF_UP)
 
+        desc = description or f"Reservas múltiples #{group_payment_order}"
         params = {
             "merchant_code": settings.REDSYS_MERCHANT_CODE,
             "terminal": settings.REDSYS_TERMINAL,
@@ -96,7 +97,7 @@ class RedsysService:
             "amount": amount,
             "merchant_data": f"group={group_payment_order}",
             "titular": titular,
-            "product_description": f"Reservas múltiples #{group_payment_order}",
+            "product_description": desc,
             "merchant_url": f"{settings.BACKEND_URL}/api/reservations/redsys/notify/",
             "url_ok": f"{settings.FRONTEND_URL}/reserve/ok?order={group_payment_order}"
             f"&amount={amount}&currency={property_currency}",
