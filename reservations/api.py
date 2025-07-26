@@ -17,16 +17,27 @@ from utils.error_codes import APIError, ReservationError, ReservationErrorCode
 from utils.redsys import RedsysService
 
 from .models import PaymentNotificationLog, Reservation, ReservationRoom
-from .schemas import ReservationClientOut, ReservationOut, ReservationSchema
+from vouchers.models import DiscountCoupon, Voucher
+from .schemas import (
+    ReservationBatchSchema,
+    ReservationClientOut,
+    ReservationOut,
+    ReservationSchema,
+)
 
 rs = RedsysService()
 router = Router(tags=["reservations"])
 
 
 @router.post("/", response={200: ReservationOut, 400: ErrorSchema})
-def create_reservation(request, reservations: List[ReservationSchema]):
+def create_reservation(request, payload: ReservationBatchSchema):
+    reservations = payload.reservations
+    voucher_code = payload.voucher_code
+    coupon_code = payload.coupon_code
     created_reservations = []
+    payable_reservations = []
     total_amount = Decimal("0.00")
+    descriptions = []
     group_payment_order = rs.generate_numeric_order()
 
     try:
@@ -105,21 +116,62 @@ def create_reservation(request, reservations: List[ReservationSchema]):
                     payment_order=group_payment_order,  # <- todas comparten el mismo
                 )
 
-                total_amount += Decimal(data.total_price)
+                if coupon_code and voucher_code:
+                    raise APIError(
+                        "Only one of voucher_code or coupon_code allowed",
+                        ReservationErrorCode.INVALID_PARAMS,
+                    )
+
+                if coupon_code:
+                    try:
+                        coupon = DiscountCoupon.objects.get(code=coupon_code, active=True)
+                        reservation.apply_coupon(coupon)
+                        descriptions.append(f"Cupon {coupon.name} ({coupon.code})")
+                    except DiscountCoupon.DoesNotExist:
+                        pass
+
+                if voucher_code:
+                    try:
+                        voucher = Voucher.objects.get(code=voucher_code, active=True)
+                    except Voucher.DoesNotExist:
+                        voucher = None
+
+                    if voucher:
+                        remaining = Decimal(str(reservation.total_price))
+                        if voucher.remaining_amount >= remaining:
+                            reservation.apply_voucher(voucher, remaining)
+                            reservation.status = Reservation.CONFIRMED
+                            reservation.payment_status = "paid"
+                            reservation.save(update_fields=["status", "payment_status"])
+                        else:
+                            redeem_amount = voucher.remaining_amount
+                            reservation.apply_voucher(voucher, redeem_amount)
+                            descriptions.append(f"Voucher {voucher.code}")
+
+                if reservation.total_price > 0:
+                    payable_reservations.append(reservation)
+                    total_amount += Decimal(str(reservation.total_price))
+
                 created_reservations.append(reservation)
 
                 ReservationRoom.objects.create(
                     reservation=reservation,
                     room_type_id=room_type_id,
                     guests=data.pax_count,
-                    price=data.total_price,
+                    price=reservation.total_price,
                 )
 
-        redsys_args = rs.prepare_payment_for_group(
-            created_reservations, total_amount, request, group_payment_order
-        )
+        if total_amount > 0:
+            redsys_args = rs.prepare_payment_for_group(
+                payable_reservations,
+                total_amount,
+                request,
+                group_payment_order,
+                description=", ".join(descriptions) if descriptions else None,
+            )
+            return {"success": True, "redsys_args": redsys_args}
 
-        return {"success": True, "redsys_args": redsys_args}
+        return {"success": True, "redsys_args": None}
 
     except Exception as e:
         raise APIError(
