@@ -184,6 +184,8 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel de administración",
     "copyright": "DOZZZE",
     "order_with_respect_to": [
+        "vouchers.DiscountCoupon",  # Cupones
+        "vouchers.Voucher",  # Vouchers
         "auth.User",  # User Menu
         "auth.Group",
         "zones.Zone",  # Zone Menu
@@ -205,6 +207,14 @@ JAZZMIN_SETTINGS = {
         "properties.Room": "fas fa-door-open",
         "properties.CommunicationMethod": "fas fa-comment-dots",
         "properties.Service": "fas fa-concierge-bell",
+        "vouchers.Voucher": "fas fa-ticket-alt",
+        "vouchers.DiscountCoupon": "fas fa-percentage",
+        "django_celery_beat": "fas fa-tasks",
+        "django_celery_beat.PeriodicTask": "fas fa-clock",
+        "django_celery_beat.IntervalSchedule": "fas fa-hourglass-half",
+        "django_celery_beat.CrontabSchedule": "fas fa-calendar-alt",
+        "django_celery_beat.SolarSchedule": "fas fa-sun",
+        "django_celery_beat.ClockedSchedule": "fas fa-stopwatch",
     },
 }
 
