@@ -74,6 +74,7 @@ def login(request, data: LoginIn):
             refresh=str(refresh),
             email=user.email,
             first_name=user.first_name,
+            staff=user.is_staff,
         )
     except UserModel.DoesNotExist:
         raise APIError("User does not exist", CustomerErrorCode.USER_NOT_FOUND, 400)

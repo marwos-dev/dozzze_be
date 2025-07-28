@@ -14,6 +14,7 @@ class TokenOut(Schema):
     refresh: str
     email: EmailStr | None
     first_name: str
+    staff: bool
 
 
 class LoginIn(Schema):
