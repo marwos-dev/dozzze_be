@@ -184,15 +184,11 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenido al panel de administración",
     "copyright": "DOZZZE",
     "order_with_respect_to": [
-        "vouchers.DiscountCoupon",  # Cupones
-        "vouchers.Voucher",  # Vouchers
         "auth.User",  # User Menu
         "auth.Group",
-        "zones.Zone",  # Zone Menu
-        "properties.Property",  # Property Menu
-        "properties.Room",
-        "properties.Service",
-        "properties.CommunicationMethod",
+        "zones",  # Zone Menu
+        "vouchers",  # Cupones
+        "properties",  # Property Menu
     ],
     "custom_css": "css/admin_custom.css",
     # "theme": "flatly",
