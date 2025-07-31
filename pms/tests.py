@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client
+from django.test import TestCase
 
 from properties.models import Property
 
@@ -73,8 +73,9 @@ class PMSHelperFactoryTest(TestCase):
 
 class PMSAPITest(TestCase):
     def setUp(self):
-        self.client = Client()
-        PMS.objects.create(name="Integrated PMS", pms_key="fnsrooms", has_integration=True)
+        PMS.objects.create(
+            name="Integrated PMS", pms_key="fnsrooms", has_integration=True
+        )
         PMS.objects.create(name="Disabled PMS", pms_key="nopms", has_integration=False)
 
     def test_list_pms(self):
@@ -83,4 +84,3 @@ class PMSAPITest(TestCase):
         data = response.json()
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["name"], "Integrated PMS")
-

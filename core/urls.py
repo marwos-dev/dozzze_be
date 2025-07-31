@@ -20,9 +20,9 @@ from django.urls import path
 from ninja import NinjaAPI
 
 from customers.api import customer_router
+from pms.api import router as pms_router
 from properties.api import router as properties_router
 from reservations.api import router as reservation_router
-from pms.api import router as pms_router
 from utils.auth_bearer import AuthBearer
 from utils.error_codes import APIError
 from utils.schemas import ErrorSchema
