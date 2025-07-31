@@ -62,6 +62,13 @@ def get_property(request, property_id: int):
 
 
 @router.get(
+    "/name/{property_name}", response=PropertyOut, throttle=[UserRateThrottle("1/m")]
+)
+def get_property_by_name(request, property_name: str):
+    return PropertyService.get_property_by_name(property_name)
+
+
+@router.get(
     "/{property_id}/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")]
 )
 def get_property_rooms(request, property_id: int):
