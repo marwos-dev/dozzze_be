@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import List, Optional
 
 from django.contrib.gis.geos import Point
+from django.utils.text import slugify
 
 from pms.models import PMS
 from pms.utils.property_helper_factory import PMSHelperFactory
@@ -45,6 +46,18 @@ class PropertyService:
         if zona:
             propiedades = propiedades.filter(zone_id=zona)
         return list(propiedades)
+
+    @staticmethod
+    def get_property_by_name(name: str) -> Property:
+        """Retrieve a property by slugified name."""
+        for prop in Property.objects.filter(active=True):
+            if slugify(prop.name) == slugify(name):
+                return prop
+        raise APIError(
+            "Property not found",
+            PropertyErrorCode.PROPERTY_NOT_FOUND,
+            404,
+        )
 
     @staticmethod
     def get_availability(data: AvailabilityRequest) -> AvailabilityResponse:

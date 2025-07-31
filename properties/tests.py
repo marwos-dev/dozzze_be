@@ -2,6 +2,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
+from django.utils.text import slugify
 from rest_framework_simplejwt.tokens import AccessToken
 
 from pms.models import PMS
@@ -189,3 +190,11 @@ class PropertyAPITest(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 400)
+
+    def test_get_property_by_name(self):
+        slug = slugify(self.property.name)
+        response = self.client.get(f"/api/properties/name/{slug}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["id"], self.property.id)
+        self.assertEqual(data["name"], self.property.name)
