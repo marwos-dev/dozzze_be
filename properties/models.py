@@ -188,7 +188,7 @@ class Room(models.Model):
         blank=True,
     )
     name = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     pax = models.PositiveIntegerField()
     external_id = models.CharField(max_length=255, null=True, blank=True)
     external_room_type_id = models.CharField(max_length=255, null=True, blank=True)
