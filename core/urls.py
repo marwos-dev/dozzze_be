@@ -22,6 +22,7 @@ from ninja import NinjaAPI
 from customers.api import customer_router
 from properties.api import router as properties_router
 from reservations.api import router as reservation_router
+from pms.api import router as pms_router
 from utils.auth_bearer import AuthBearer
 from utils.error_codes import APIError
 from utils.schemas import ErrorSchema
@@ -63,6 +64,11 @@ api.add_router(
     "/reservations/",
     reservation_router,
     auth=auth_bearer,
+)
+api.add_router(
+    "/pms/",
+    pms_router,
+    auth=public_auth,
 )
 
 urlpatterns = [
