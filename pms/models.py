@@ -1,9 +1,6 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 
-from pms.utils.property_helper_factory import PMSHelperFactory
-
-
 class PMS(models.Model):
     name = models.CharField(max_length=255, unique=True)
     active = models.BooleanField(default=True)
@@ -18,6 +15,9 @@ class PMS(models.Model):
 
     def clean(self):
         super().clean()
+        # Import lazily to avoid circular import issues during app loading
+        from pms.utils.property_helper_factory import PMSHelperFactory
+
         factory = PMSHelperFactory()
         if not factory.has_helper(self.pms_key):
             raise ValidationError({"pms_key": "No helper found for this key."})
