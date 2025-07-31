@@ -1,5 +1,6 @@
-from django.db import models
 from django.core.exceptions import ValidationError
+from django.db import models
+
 
 class PMS(models.Model):
     name = models.CharField(max_length=255, unique=True)

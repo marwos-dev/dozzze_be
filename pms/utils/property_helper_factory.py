@@ -1,13 +1,14 @@
 """Utilities to obtain the correct PMS helper for a property."""
 
-from importlib import import_module
 import inspect
 import pkgutil
+from importlib import import_module
 from typing import Dict, Type
 
 from django.utils.text import slugify
 
-from pms.utils.helpers import __path__ as helpers_path, __name__ as helpers_pkg
+from pms.utils.helpers import __name__ as helpers_pkg
+from pms.utils.helpers import __path__ as helpers_path
 from pms.utils.helpers.base import BasePropertyHelper
 from properties.models import Property
 from utils.SingletonMeta import SingletonMeta
