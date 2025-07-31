@@ -69,3 +69,18 @@ class PMSHelperFactoryTest(TestCase):
         factory = PMSHelperFactory()
         with self.assertRaises(ValueError):
             factory.get_helper(prop)
+
+
+class PMSAPITest(TestCase):
+    def setUp(self):
+        PMS.objects.create(
+            name="Integrated PMS", pms_key="fnsrooms", has_integration=True
+        )
+        PMS.objects.create(name="Disabled PMS", pms_key="nopms", has_integration=False)
+
+    def test_list_pms(self):
+        response = self.client.get("/api/pms/", HTTP_X_APP_KEY="clave-larga-y-unica")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Integrated PMS")
