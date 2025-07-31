@@ -18,7 +18,7 @@ class PMSTest(TestCase):
             address="Addr",
             location="POINT(0 0)",
         )
-        self.pms = PMS.objects.create(name="Test PMS")
+        self.pms = PMS.objects.create(name="Test PMS", pms_key="fnsrooms")
 
     def test_pms_str(self):
         self.assertEqual(str(self.pms), "Test PMS")
@@ -31,3 +31,41 @@ class PMSTest(TestCase):
             response_data={"ok": True},
         )
         self.assertIn("ok", resp.response_data)
+
+
+class PMSHelperFactoryTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username="owner2", password="pass")
+        self.pms = PMS.objects.create(name="Factory PMS", pms_key="fnsrooms")
+        self.property = Property.objects.create(
+            owner=self.user,
+            name="Factory Property",
+            description="Desc",
+            address="Addr",
+            location="POINT(0 0)",
+            pms=self.pms,
+        )
+
+    def test_get_helper(self):
+        from pms.utils.helpers.FnsPropertyHelper import FnsPropertyHelper
+        from pms.utils.property_helper_factory import PMSHelperFactory
+
+        factory = PMSHelperFactory()
+        self.assertTrue(factory.has_helper("fnsrooms"))
+        helper = factory.get_helper(self.property)
+        self.assertIsInstance(helper, FnsPropertyHelper)
+
+    def test_get_helper_no_pms(self):
+        from pms.utils.property_helper_factory import PMSHelperFactory
+
+        prop = Property.objects.create(
+            owner=self.user,
+            name="No PMS",
+            description="Desc",
+            address="Addr2",
+            location="POINT(0 0)",
+        )
+
+        factory = PMSHelperFactory()
+        with self.assertRaises(ValueError):
+            factory.get_helper(prop)

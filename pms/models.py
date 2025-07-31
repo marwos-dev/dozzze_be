@@ -1,9 +1,11 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
 class PMS(models.Model):
     name = models.CharField(max_length=255, unique=True)
     active = models.BooleanField(default=True)
+    pms_key = models.CharField(max_length=255, unique=True)
     pms_external_id = models.CharField(
         max_length=255, unique=True, blank=True, null=True
     )
@@ -11,6 +13,15 @@ class PMS(models.Model):
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        # Import lazily to avoid circular import issues during app loading
+        from pms.utils.property_helper_factory import PMSHelperFactory
+
+        factory = PMSHelperFactory()
+        if not factory.has_helper(self.pms_key):
+            raise ValidationError({"pms_key": "No helper found for this key."})
 
     def __str__(self):
         return self.name

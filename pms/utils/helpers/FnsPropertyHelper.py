@@ -15,6 +15,10 @@ from properties.models import Property
 class FnsPropertyHelper(BasePropertyHelper):
     """Helper class for FNS Rooms PMS integration."""
 
+    #: Unique key used by :class:`PMSHelperFactory` to register this helper.
+    #: This should match ``PMS.pms_key`` in the database.
+    pms_key = "fnsrooms"
+
     def __init__(self, prop: Property):
         super().__init__(prop)
         self.api_auth = AuthApi()
