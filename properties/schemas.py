@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from ninja import Field, Schema
 
-from utils import generate_presigned_url
+from utils import generate_presigned_url, SuccessSchema
 
 
 class PropertySearchInput(Schema):
@@ -193,6 +193,12 @@ class PropertyUpdateIn(Schema):
     zone_id: Optional[int] = None
     pms_id: Optional[int] = None
     use_pms_information: Optional[bool] = None
+
+
+class PropertyCreatedOut(SuccessSchema):
+    """Response schema for a created property."""
+
+    id: int
 
 
 class PropertyImageOut(Schema):

@@ -93,6 +93,9 @@ class PropertyAPITest(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("id", data)
+        self.assertTrue(Property.objects.filter(id=data["id"]).exists())
         self.assertEqual(Property.objects.count(), 2)
 
     def test_create_property_invalid_zone(self):

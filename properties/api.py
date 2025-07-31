@@ -19,6 +19,7 @@ from .schemas import (
     AvailabilityResponse,
     PmsDataPropertyIn,
     PmsDataPropertyOut,
+    PropertyCreatedOut,
     PropertyImageOut,
     PropertyIn,
     PropertyOut,
@@ -114,9 +115,14 @@ def my_properties(request):
     return Property.objects.filter(owner=request.user)
 
 
-@router.post("/my/", response=PropertyOut, auth=AuthBearer())
+@router.post("/my/", response=PropertyCreatedOut, auth=AuthBearer())
 def create_property(request, data: PropertyIn):
-    return PropertyService.create_property(request.user, data)
+    prop = PropertyService.create_property(request.user, data)
+    return {
+        "id": prop.id,
+        "message": "Property created",
+        "success": True,
+    }
 
 
 @router.put("/my/{property_id}", response=PropertyOut, auth=AuthBearer())
