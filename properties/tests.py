@@ -1,7 +1,7 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import TestCase
 from django.utils.text import slugify
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -53,7 +53,6 @@ class PropertyModelTest(TestCase):
 
 class PropertyAPITest(TestCase):
     def setUp(self):
-        self.client = Client()
         self.staff = User.objects.create_user(
             username="staff",
             password="pass",
