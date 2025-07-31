@@ -185,10 +185,10 @@ class PropertyService:
                 404,
             )
 
-        return {
-            "rooms": rooms_availability,
-            "total_price_per_room_type": total_price_per_room_type,
-        }
+        return AvailabilityResponse(
+            rooms=rooms_availability,
+            total_price_per_room_type=total_price_per_room_type,
+        )
 
     @staticmethod
     def create_property(user, data: PropertyIn) -> Property:
