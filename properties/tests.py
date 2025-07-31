@@ -17,7 +17,7 @@ User = get_user_model()
 class PropertyModelTest(TestCase):
     def setUp(self):
         self.user = User.objects.create(username="owner", password="pass")
-        self.pms = PMS.objects.create(name="Test PMS")
+        self.pms = PMS.objects.create(name="Test PMS", pms_key="fnsrooms")
         self.property = Property.objects.create(
             owner=self.user,
             name="Test Property",
@@ -59,7 +59,7 @@ class PropertyAPITest(TestCase):
             is_staff=True,
         )
         self.zone = Zone.objects.create(name="Zone", description="desc")
-        self.pms = PMS.objects.create(name="Test PMS")
+        self.pms = PMS.objects.create(name="Test PMS", pms_key="fnsrooms")
         self.property = Property.objects.create(
             owner=self.staff,
             name="APITestProp",
