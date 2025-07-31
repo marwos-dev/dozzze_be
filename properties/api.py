@@ -13,7 +13,7 @@ from utils import (
 )
 from utils.auth_bearer import AuthBearer
 
-from .models import Property, Room
+from .models import Property, Room, RoomType
 from .schemas import (
     AvailabilityRequest,
     AvailabilityResponse,
@@ -23,8 +23,8 @@ from .schemas import (
     PropertyIn,
     PropertyOut,
     PropertyUpdateIn,
-    RoomOut,
     RoomTypeImageOut,
+    RoomTypeOut,
 )
 from .services import PropertyService
 
@@ -61,25 +61,23 @@ def get_property(request, property_id: int):
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
-@router.get(
-    "/name/{property_name}", response=PropertyOut, throttle=[UserRateThrottle("1/m")]
-)
+@router.get("/name/{property_name}", response=PropertyOut)
 def get_property_by_name(request, property_name: str):
     return PropertyService.get_property_by_name(property_name)
 
 
-@router.get(
-    "/{property_id}/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")]
-)
+@router.get("/{property_id}/rooms", response=List[RoomTypeOut])
 def get_property_rooms(request, property_id: int):
     try:
         _property = Property.objects.get(id=property_id)
-        return _property.rooms.all()
+        return _property.room_types.all()
     except Property.DoesNotExist:
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
-@router.get("/rooms/{room_id}", response=RoomOut, throttle=[UserRateThrottle("10/m")])
+@router.get(
+    "/rooms/{room_id}", response=RoomTypeOut, throttle=[UserRateThrottle("10/m")]
+)
 def get_room(request, room_id: int):
     try:
         room = Room.objects.get(id=room_id)
@@ -88,7 +86,7 @@ def get_room(request, room_id: int):
         raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
 
 
-@router.get("/rooms", response=List[RoomOut], throttle=[UserRateThrottle("10/m")])
+@router.get("/rooms", response=List[RoomTypeOut])
 def get_rooms(
     request,
     zone_id: Optional[int] = Query(),
@@ -106,7 +104,7 @@ def get_rooms(
                 400,
             )
 
-        return Room.objects.filter(property__in=properties)
+        return RoomType.objects.filter(property__in=properties)
     except Property.DoesNotExist:
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
