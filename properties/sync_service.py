@@ -167,7 +167,7 @@ class SyncService:
         for reservation_data in reservations_data:
 
             already_exist = Reservation.objects.filter(
-                user=user if user else None,
+                user=None,
                 check_in=datetime.strptime(
                     reservation_data["check_in"], "%Y-%m-%d"
                 ).date(),

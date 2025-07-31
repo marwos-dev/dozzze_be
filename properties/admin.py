@@ -224,19 +224,19 @@ class PropertyAdmin(GISModelAdmin):
                 level=messages.ERROR,
             )
 
-        sync_reservations = SyncService.sync_reservations(prop, helper, request.user)
-        if sync_reservations:
-            self.message_user(
-                request,
-                f"Reservas de la propiedad {prop.name} actualizadas correctamente.",
-                level=messages.SUCCESS,
-            )
-        else:
-            self.message_user(
-                request,
-                f"No se encontraron reservas para la propiedad {prop.name}.",
-                level=messages.ERROR,
-            )
+        # sync_reservations = SyncService.sync_reservations(prop, helper, request.user)
+        # if sync_reservations:
+        #     self.message_user(
+        #         request,
+        #         f"Reservas de la propiedad {prop.name} actualizadas correctamente.",
+        #         level=messages.SUCCESS,
+        #     )
+        # else:
+        #     self.message_user(
+        #         request,
+        #         f"No se encontraron reservas para la propiedad {prop.name}.",
+        #         level=messages.ERROR,
+        #     )
 
         sync_availability = SyncService.sync_rates_and_availability(prop, helper)
         if sync_availability:

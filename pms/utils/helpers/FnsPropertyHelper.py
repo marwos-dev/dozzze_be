@@ -88,7 +88,7 @@ class FnsPropertyHelper(BasePropertyHelper):
                 )
             elif prop.pms_data.first_sync and not checkin and not checkout:
                 # Hacer una request por cada mes del año actual
-                for month in range(1, today.month + 1):
+                for month in range(today.month, today.month + 1):
                     first_day = date(today.year, month, 1)
                     last_day = date(
                         today.year, month, calendar.monthrange(today.year, month)[1]
@@ -218,7 +218,7 @@ class FnsPropertyHelper(BasePropertyHelper):
                     start_date, end_date, api_call, prop
                 )
             else:
-                for month in range(1, today.month + 1):
+                for month in range(today.month, today.month + 1):
                     if start_date is None:
                         start_date = date(today.year, month, 1)
 
