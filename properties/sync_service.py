@@ -174,7 +174,7 @@ class SyncService:
                 check_out=datetime.strptime(
                     reservation_data["check_out"], "%Y-%m-%d"
                 ).date(),
-                guest_name=reservation_data["guest_name"],
+                property_id=prop.id,
             ).exists()
             if already_exist:
                 print(f"Reservation already exists for: {reservation_data}")
