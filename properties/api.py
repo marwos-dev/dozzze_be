@@ -25,6 +25,7 @@ from .schemas import (
     PropertyUpdateIn,
     RoomTypeImageOut,
     RoomTypeOut,
+    RoomTypeUpdateIn,
 )
 from .services import PropertyService
 
@@ -201,6 +202,16 @@ def list_room_type_images(request, room_type_id: int):
 )
 def add_room_type_image(request, room_type_id: int, image: UploadedFile = File(...)):
     return PropertyService.add_room_type_image(request.user, room_type_id, image)
+
+
+@router.put(
+    "/my/room-types/{room_type_id}",
+    response=RoomTypeOut,
+    auth=AuthBearer(),
+)
+def update_room_type(request, room_type_id: int, data: RoomTypeUpdateIn):
+    """Update a room type for the authenticated staff user."""
+    return PropertyService.update_room_type(request.user, room_type_id, data)
 
 
 @router.post(

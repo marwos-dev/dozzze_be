@@ -33,6 +33,7 @@ from .schemas import (
     PropertyIn,
     PropertyUpdateIn,
     RoomAvailability,
+    RoomTypeUpdateIn,
 )
 from .sync_service import SyncService
 
@@ -395,6 +396,22 @@ class PropertyService:
             raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
         img = RoomTypeImage.objects.create(room_type=rt, image=image)
         return img
+
+    @staticmethod
+    def update_room_type(user, room_type_id: int, data: RoomTypeUpdateIn) -> RoomType:
+        """Update a room type owned by the user."""
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+
+        rt = RoomType.objects.filter(id=room_type_id, property__owner=user).first()
+        if not rt:
+            raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
+
+        payload = data.dict(exclude_unset=True)
+        for attr, value in payload.items():
+            setattr(rt, attr, value)
+        rt.save()
+        return rt
 
     @staticmethod
     def sync_property_with_pms(user, property_id: int) -> SuccessSchema:
