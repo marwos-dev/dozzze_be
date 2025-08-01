@@ -195,6 +195,13 @@ class PropertyUpdateIn(Schema):
     use_pms_information: Optional[bool] = None
 
 
+class RoomTypeUpdateIn(Schema):
+    """Input schema for updating a room type."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
 class PropertyImageOut(Schema):
     id: int
     image: str

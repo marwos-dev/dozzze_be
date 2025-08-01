@@ -197,3 +197,48 @@ class PropertyAPITest(TestCase):
         data = response.json()
         self.assertEqual(data["id"], self.property.id)
         self.assertEqual(data["name"], self.property.name)
+
+    def test_update_room_type_success(self):
+        room_type = RoomType.objects.create(property=self.property, name="Old")
+        payload = {"name": "New", "description": "Updated"}
+        response = self.client.put(
+            f"/api/properties/my/room-types/{room_type.id}",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        room_type.refresh_from_db()
+        self.assertEqual(room_type.name, "New")
+        self.assertEqual(room_type.description, "Updated")
+
+    def test_update_room_type_not_found(self):
+        other_user = User.objects.create_user(
+            username="other", password="pass", is_staff=True
+        )
+        other_prop = Property.objects.create(
+            owner=other_user,
+            name="OtherProp",
+            description="d",
+            address="Addr",
+            location="POINT(0 0)",
+        )
+        other_rt = RoomType.objects.create(property=other_prop, name="Type")
+        payload = {"name": "New"}
+        response = self.client.put(
+            f"/api/properties/my/room-types/{other_rt.id}",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_update_room_type_access_denied(self):
+        rt = RoomType.objects.create(property=self.property, name="Old")
+        user = User.objects.create_user(username="u", password="pass")
+        token = AccessToken.for_user(user)
+        self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+        response = self.client.put(
+            f"/api/properties/my/room-types/{rt.id}",
+            data={"name": "N"},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 403)
