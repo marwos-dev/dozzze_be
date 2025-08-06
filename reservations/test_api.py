@@ -66,7 +66,7 @@ class ReservationAPITest(TestCase):
             created_by=self.user,
         )
         payload = self._payload(80)
-        payload["voucher_code"] = voucher.code
+        payload["code"] = voucher.code
         with patch("utils.redsys.RedsysService.prepare_payment_for_group") as mock_pay:
             response = self.client.post(
                 "/api/reservations/",
@@ -94,7 +94,7 @@ class ReservationAPITest(TestCase):
             created_by=self.user,
         )
         payload = self._payload(80)
-        payload["voucher_code"] = voucher.code
+        payload["code"] = voucher.code
         payment_data = {
             "endpoint": "http://pay",
             "Ds_SignatureVersion": "1",
@@ -131,7 +131,7 @@ class ReservationAPITest(TestCase):
             created_by=self.user,
         )
         payload = self._payload(100)
-        payload["coupon_code"] = coupon.code
+        payload["code"] = coupon.code
         payment_data = {
             "endpoint": "http://pay",
             "Ds_SignatureVersion": "1",

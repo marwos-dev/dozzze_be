@@ -27,6 +27,7 @@ from utils.auth_bearer import AuthBearer
 from utils.error_codes import APIError
 from utils.schemas import ErrorSchema
 from utils.security import PublicAPIKey
+from vouchers.api import router as voucher_router
 from zones.api import router as zones_router
 
 public_auth = PublicAPIKey()
@@ -63,6 +64,11 @@ api.add_router(
 api.add_router(
     "/reservations/",
     reservation_router,
+    auth=auth_bearer,
+)
+api.add_router(
+    "/vouchers/",
+    voucher_router,
     auth=auth_bearer,
 )
 api.add_router(

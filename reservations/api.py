@@ -27,8 +27,17 @@ router = Router(tags=["reservations"])
 @router.post("/", response={200: ReservationOut, 400: ErrorSchema})
 def create_reservation(request, payload: ReservationBatchSchema):
     reservations = payload.reservations
-    voucher_code = payload.voucher_code
-    coupon_code = payload.coupon_code
+    code = payload.code
+    voucher = None
+    coupon = None
+    if code:
+        try:
+            voucher = Voucher.objects.get(code=code, active=True)
+        except Voucher.DoesNotExist:
+            try:
+                coupon = DiscountCoupon.objects.get(code=code, active=True)
+            except DiscountCoupon.DoesNotExist:
+                pass
     created_reservations = []
     payable_reservations = []
     total_amount = Decimal("0.00")
@@ -112,39 +121,20 @@ def create_reservation(request, payload: ReservationBatchSchema):
                     payment_order=group_payment_order,  # <- todas comparten el mismo
                 )
 
-                if coupon_code and voucher_code:
-                    raise APIError(
-                        "Only one of voucher_code or coupon_code allowed",
-                        ReservationErrorCode.INVALID_PARAMS,
-                    )
-
-                if coupon_code:
-                    try:
-                        coupon = DiscountCoupon.objects.get(
-                            code=coupon_code, active=True
-                        )
-                        reservation.apply_coupon(coupon)
-                        descriptions.append(f"Cupon {coupon.name} ({coupon.code})")
-                    except DiscountCoupon.DoesNotExist:
-                        pass
-
-                if voucher_code:
-                    try:
-                        voucher = Voucher.objects.get(code=voucher_code, active=True)
-                    except Voucher.DoesNotExist:
-                        voucher = None
-
-                    if voucher:
-                        remaining = Decimal(str(reservation.total_price))
-                        if voucher.remaining_amount >= remaining:
-                            reservation.apply_voucher(voucher, remaining)
-                            reservation.status = Reservation.CONFIRMED
-                            reservation.payment_status = "paid"
-                            reservation.save(update_fields=["status", "payment_status"])
-                        else:
-                            redeem_amount = voucher.remaining_amount
-                            reservation.apply_voucher(voucher, redeem_amount)
-                            descriptions.append(f"Voucher {voucher.code}")
+                if voucher:
+                    remaining = Decimal(str(reservation.total_price))
+                    if voucher.remaining_amount >= remaining:
+                        reservation.apply_voucher(voucher, remaining)
+                        reservation.status = Reservation.CONFIRMED
+                        reservation.payment_status = "paid"
+                        reservation.save(update_fields=["status", "payment_status"])
+                    else:
+                        redeem_amount = voucher.remaining_amount
+                        reservation.apply_voucher(voucher, redeem_amount)
+                        descriptions.append(f"Voucher {voucher.code}")
+                elif coupon:
+                    reservation.apply_coupon(coupon)
+                    descriptions.append(f"Cupon {coupon.name} ({coupon.code})")
 
                 if reservation.total_price > 0:
                     payable_reservations.append(reservation)
