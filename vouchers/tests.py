@@ -54,6 +54,8 @@ class CouponAndReservationIntegrationTest(TestCase):
         self.reservation.refresh_from_db()
         self.assertEqual(self.reservation.total_price, 90)
         self.assertEqual(self.reservation.discount_coupon, self.coupon)
+        self.assertEqual(self.reservation.original_price, 100)
+        self.assertEqual(self.reservation.discount_amount, 10)
 
     def test_apply_voucher(self):
         self.reservation.apply_voucher(self.voucher, 30)
@@ -61,4 +63,16 @@ class CouponAndReservationIntegrationTest(TestCase):
         self.assertEqual(self.voucher.remaining_amount, 20)
         self.reservation.refresh_from_db()
         self.assertEqual(self.reservation.total_price, 70)
+        self.assertEqual(self.reservation.original_price, 100)
+        self.assertEqual(self.reservation.discount_amount, 30)
         self.assertEqual(self.reservation.voucher_redemptions.count(), 1)
+
+    def test_apply_coupon_and_voucher(self):
+        self.reservation.apply_coupon(self.coupon)
+        self.reservation.apply_voucher(self.voucher, 30)
+        self.reservation.refresh_from_db()
+        self.voucher.refresh_from_db()
+        self.assertEqual(self.reservation.total_price, 60)
+        self.assertEqual(self.reservation.original_price, 100)
+        self.assertEqual(self.reservation.discount_amount, 40)
+        self.assertEqual(self.voucher.remaining_amount, 20)
