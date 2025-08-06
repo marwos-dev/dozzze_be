@@ -13,7 +13,7 @@ from utils import (
 )
 from utils.auth_bearer import AuthBearer
 
-from .models import Property, Room, RoomType
+from .models import Property, RoomType
 from .schemas import (
     AvailabilityRequest,
     AvailabilityResponse,
@@ -26,6 +26,9 @@ from .schemas import (
     RoomTypeImageOut,
     RoomTypeOut,
     RoomTypeUpdateIn,
+    ServiceIn,
+    ServiceOut,
+    ServiceUpdateIn,
 )
 from .services import PropertyService
 
@@ -53,15 +56,6 @@ def get_availability(request, data: AvailabilityRequest):
     return PropertyService.get_availability(data)
 
 
-@router.get("/{property_id}", response=PropertyOut, throttle=[UserRateThrottle("1/m")])
-def get_property(request, property_id: int):
-    try:
-        _property = Property.objects.get(id=property_id)
-        return _property
-    except Property.DoesNotExist:
-        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
-
-
 @router.get("/name/{property_name}", response=PropertyOut)
 def get_property_by_name(request, property_name: str):
     return PropertyService.get_property_by_name(property_name)
@@ -77,13 +71,13 @@ def get_property_rooms(request, property_id: int):
 
 
 @router.get(
-    "/rooms/{room_id}", response=RoomTypeOut, throttle=[UserRateThrottle("10/m")]
+    "/rooms/{room_type_id}", response=RoomTypeOut, throttle=[UserRateThrottle("10/m")]
 )
-def get_room(request, room_id: int):
+def get_room_type(request, room_type_id: int):
     try:
-        room = Room.objects.get(id=room_id)
-        return room
-    except Room.DoesNotExist:
+        room_type = RoomType.objects.get(id=room_type_id)
+        return room_type
+    except RoomType.DoesNotExist:
         raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
 
 
@@ -108,6 +102,11 @@ def get_rooms(
         return RoomType.objects.filter(property__in=properties)
     except Property.DoesNotExist:
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
+
+
+@router.get("/services", response=List[ServiceOut])
+def list_services(request):
+    return PropertyService.list_services()
 
 
 # ----------------------- Staff management endpoints -----------------------
@@ -189,6 +188,48 @@ def delete_property_image(request, property_id: int, image_id: int):
 
 
 @router.get(
+    "/my/{property_id}/services",
+    response=List[ServiceOut],
+    auth=AuthBearer(),
+)
+def list_property_services(request, property_id: int):
+    return PropertyService.list_property_services(request.user, property_id)
+
+
+@router.post(
+    "/my/{property_id}/services",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def add_property_service(request, property_id: int, data: ServiceIn):
+    return PropertyService.add_property_service(request.user, property_id, data)
+
+
+@router.put(
+    "/my/{property_id}/services/{service_id}",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def update_property_service(
+    request, property_id: int, service_id: int, data: ServiceUpdateIn
+):
+    return PropertyService.update_property_service(
+        request.user, property_id, service_id, data
+    )
+
+
+@router.delete(
+    "/my/{property_id}/services/{service_id}",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
+def delete_property_service(request, property_id: int, service_id: int):
+    return PropertyService.delete_property_service(
+        request.user, property_id, service_id
+    )
+
+
+@router.get(
     "/my/room-types/{room_type_id}/images",
     response=List[RoomTypeImageOut],
     auth=AuthBearer(),
@@ -222,3 +263,12 @@ def update_room_type(request, room_type_id: int, data: RoomTypeUpdateIn):
 def sync_property_with_pms(request, property_id: int):
     """Synchronize a property with its PMS."""
     return PropertyService.sync_property_with_pms(request.user, property_id)
+
+
+@router.get("/{property_id}", response=PropertyOut, throttle=[UserRateThrottle("1/m")])
+def get_property(request, property_id: int):
+    try:
+        _property = Property.objects.get(id=property_id)
+        return _property
+    except Property.DoesNotExist:
+        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)

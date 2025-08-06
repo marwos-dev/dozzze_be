@@ -9,7 +9,7 @@ from pms.models import PMS
 from reservations.models import Reservation
 from zones.models import Zone
 
-from .models import Property, Room, RoomType
+from .models import Property, Room, RoomType, Service
 
 User = get_user_model()
 
@@ -242,3 +242,55 @@ class PropertyAPITest(TestCase):
             content_type="application/json",
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_property_service_crud(self):
+        payload = {"code": "wifi", "name": "Wifi", "description": "Fast"}
+        response = self.client.post(
+            f"/api/properties/my/{self.property.id}/services",
+            data=payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        service_id = response.json()["id"]
+
+        response = self.client.get(f"/api/properties/my/{self.property.id}/services")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["code"], "wifi")
+
+        update_payload = {"description": "Super fast"}
+        response = self.client.put(
+            f"/api/properties/my/{self.property.id}/services/{service_id}",
+            data=update_payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["description"], "Super fast")
+
+        response = self.client.delete(
+            f"/api/properties/my/{self.property.id}/services/{service_id}"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Service.objects.count(), 0)
+
+    def test_room_type_inherits_property_services(self):
+        service = Service.objects.create(code="ac", name="A/C", description="Cool")
+        self.property.services.add(service)
+        rt = RoomType.objects.create(property=self.property, name="Suite")
+        response = self.client.get(f"/api/properties/rooms/{rt.id}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("services", data)
+        codes = [s["code"] for s in data["services"]]
+        self.assertIn(service.code, codes)
+
+    def test_list_service_catalog(self):
+        Service.objects.create(code="wifi", name="Wifi", description="Fast")
+        Service.objects.create(code="ac", name="A/C", description="Cool")
+        response = self.client.get("/api/properties/services")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        codes = {s["code"] for s in data}
+        self.assertIn("wifi", codes)
+        self.assertIn("ac", codes)
