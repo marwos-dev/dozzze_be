@@ -1,3 +1,4 @@
+# flake8: noqa
 from dotenv import load_dotenv
 
 from .base import *  # noqa: F401,F403

@@ -99,7 +99,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.getenv("DB_NAME", "mtr2"),
+        "NAME": os.getenv("DB_NAME", "mtr4"),
         "USER": os.getenv("DB_USER", "marcosolmedo"),
         "PASSWORD": os.getenv("DB_PASSWORD", "40575526"),
         "HOST": os.getenv("DB_HOST", "localhost"),
@@ -211,7 +211,11 @@ JAZZMIN_SETTINGS = {
 }
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if os.getenv("CSRF_TRUSTED_ORIGINS") else []
+CSRF_TRUSTED_ORIGINS = (
+    os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if os.getenv("CSRF_TRUSTED_ORIGINS")
+    else []
+)
 
 # Celery
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")

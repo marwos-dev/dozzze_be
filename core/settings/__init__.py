@@ -1,8 +1,8 @@
 import os
 
-env = os.getenv("DJANGO_ENV", "development")
+DEVELOPMENT = os.getenv("DJANGO_ENV", "development") == "development"
 
-if env == "production":
-    from .production import *  # noqa: F401,F403
-else:
+if DEVELOPMENT:
     from .development import *  # noqa: F401,F403
+else:
+    from .production import *  # noqa: F401,F403

@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.core.management.base import BaseCommand
 
-from properties.models import Property, Service, PropertyService
+from properties.models import Property, PropertyService, Service
 from zones.models import Zone
 
 
@@ -15,6 +15,10 @@ class Command(BaseCommand):
             username="admin",
             defaults={"email": "admin@example.com"},
         )
+        admin.set_password("1234")
+        admin.is_staff = True
+        admin.is_superuser = True
+        admin.save()
         zone, _ = Zone.objects.get_or_create(
             name="Zona Demo",
             defaults={"description": "Zona de ejemplo"},
