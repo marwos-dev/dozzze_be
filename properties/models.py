@@ -95,6 +95,11 @@ def property_image_upload_path(instance, filename):
     return f"properties/gallery/{uuid4()}-{filename}"
 
 
+# NOTE: Kept for backward compatibility with historical migrations.
+def room_image_upload_path(instance, filename):
+    return f"properties/gallery/{uuid4()}-{filename}"
+
+
 class PropertyImage(models.Model):
     property = models.ForeignKey(
         Property, related_name="gallery", on_delete=models.CASCADE, verbose_name="Zona"
