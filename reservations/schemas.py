@@ -44,8 +44,7 @@ class ReservationSchema(Schema):
 
 class ReservationBatchSchema(Schema):
     reservations: List[ReservationSchema]
-    voucher_code: Optional[str] = None
-    coupon_code: Optional[str] = None
+    code: Optional[str] = None
 
 
 class RedsysSchemaOut(Schema):
