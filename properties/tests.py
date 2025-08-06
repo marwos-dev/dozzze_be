@@ -253,9 +253,7 @@ class PropertyAPITest(TestCase):
         self.assertEqual(response.status_code, 200)
         service_id = response.json()["id"]
 
-        response = self.client.get(
-            f"/api/properties/my/{self.property.id}/services"
-        )
+        response = self.client.get(f"/api/properties/my/{self.property.id}/services")
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(len(data), 1)

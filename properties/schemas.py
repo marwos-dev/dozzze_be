@@ -37,6 +37,12 @@ class ServiceIn(Schema):
     description: Optional[str] = None
 
 
+class ServiceUpdateIn(ServiceIn):
+    code: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
 class ServiceOut(ServiceIn):
     id: int
 

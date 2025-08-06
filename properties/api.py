@@ -28,6 +28,7 @@ from .schemas import (
     RoomTypeUpdateIn,
     ServiceIn,
     ServiceOut,
+    ServiceUpdateIn,
 )
 from .services import PropertyService
 
@@ -210,7 +211,7 @@ def add_property_service(request, property_id: int, data: ServiceIn):
     auth=AuthBearer(),
 )
 def update_property_service(
-    request, property_id: int, service_id: int, data: ServiceIn
+    request, property_id: int, service_id: int, data: ServiceUpdateIn
 ):
     return PropertyService.update_property_service(
         request.user, property_id, service_id, data
@@ -223,7 +224,9 @@ def update_property_service(
     auth=AuthBearer(),
 )
 def delete_property_service(request, property_id: int, service_id: int):
-    return PropertyService.delete_property_service(request.user, property_id, service_id)
+    return PropertyService.delete_property_service(
+        request.user, property_id, service_id
+    )
 
 
 @router.get(

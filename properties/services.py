@@ -23,9 +23,9 @@ from .models import (
     PmsDataProperty,
     Property,
     PropertyImage,
-    Service,
     RoomType,
     RoomTypeImage,
+    Service,
 )
 from .schemas import (
     AvailabilityRequest,
@@ -395,7 +395,6 @@ class PropertyService:
             )
         return list(prop.services.all())
 
-    
     @staticmethod
     def add_property_service(user, property_id: int, data: ServiceIn) -> Service:
         if not user.is_staff:
@@ -456,7 +455,6 @@ class PropertyService:
         if not service.properties.exists():
             service.delete()
         return SuccessSchema(message="Service deleted")
-
 
     @staticmethod
     def list_room_type_images(user, room_type_id: int) -> List[RoomTypeImage]:
