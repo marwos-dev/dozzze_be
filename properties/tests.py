@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -9,7 +10,9 @@ from pms.models import PMS
 from reservations.models import Reservation
 from zones.models import Zone
 
-from .models import Property, Room, RoomType, Service
+from .models import Availability, Property, Room, RoomType, Service
+from .schemas import AvailabilityRequest
+from .services import PropertyService
 
 User = get_user_model()
 
@@ -294,3 +297,47 @@ class PropertyAPITest(TestCase):
         codes = {s["code"] for s in data}
         self.assertIn("wifi", codes)
         self.assertIn("ac", codes)
+
+
+class AvailabilityServiceTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username="user2", password="pass")
+        self.pms = PMS.objects.create(name="PMS2", pms_key="fnsrooms")
+        self.property = Property.objects.create(
+            owner=self.user,
+            name="Prop2",
+            description="Desc",
+            address="Addr",
+            location="POINT(0 0)",
+            pms=self.pms,
+        )
+        self.room_type = RoomType.objects.create(property=self.property, name="Deluxe")
+        rates = [
+            {"rate_id": 1, "prices": [{"occupancy": 2, "price": 100.0}]},
+            {"rate_id": 2, "prices": [{"occupancy": 2, "price": 80.0}]},
+        ]
+        Availability.objects.create(
+            property=self.property,
+            room_type=self.room_type,
+            date=date(2025, 1, 1),
+            availability=5,
+            rates=json.dumps(rates),
+        )
+        Availability.objects.create(
+            property=self.property,
+            room_type=self.room_type,
+            date=date(2025, 1, 2),
+            availability=5,
+            rates=json.dumps(rates),
+        )
+
+    def test_rate_id_in_total_price(self):
+        req = AvailabilityRequest(
+            property_id=self.property.id,
+            check_in=date(2025, 1, 1),
+            check_out=date(2025, 1, 3),
+            guests=2,
+        )
+        res = PropertyService.get_availability(req)
+        key = f"{self.room_type.name}-guests:2"
+        self.assertIn("rate_id", res.total_price_per_room_type[key][0])

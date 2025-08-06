@@ -147,6 +147,7 @@ def create_reservation(request, payload: ReservationBatchSchema):
                     room_type_id=room_type_id,
                     guests=data.pax_count,
                     price=reservation.total_price,
+                    rate_id=data.rate_id,
                 )
 
         if total_amount > 0:

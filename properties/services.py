@@ -154,11 +154,12 @@ class PropertyService:
                     )
                 )
 
-                for i, rate in enumerate(parsed_rates):
+                for rate in parsed_rates:
+                    rate_id = rate.get("rate_id")
                     found = False
                     for price in rate.get("prices", []):
                         if price.get("occupancy") == data.guests:
-                            rate_totals[i] += price["price"]
+                            rate_totals[rate_id] += price["price"]
                             found = True
                             break
                     if not found:
@@ -169,9 +170,9 @@ class PropertyService:
                         )
 
             valid_totals = [
-                {"rate_index": i, "total_price": round(rate_totals[i], 2)}
-                for i in rate_totals
-                if rate_valid[i]
+                {"rate_id": rid, "total_price": round(rate_totals[rid], 2)}
+                for rid in rate_totals
+                if rate_valid[rid]
             ]
 
             if not valid_totals:

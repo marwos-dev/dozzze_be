@@ -506,8 +506,9 @@ class FnsPropertyHelper(BasePropertyHelper):
                 continue
 
             for rate in day.find("rates").findall("rate"):
+                rate_id_text = rate.findtext("rate_id")
                 rate_data = {
-                    "rate_id": rate.findtext("rate_id"),
+                    "rate_id": int(rate_id_text) if rate_id_text is not None else None,
                     "prices": [],
                     "restrictions": {},
                 }

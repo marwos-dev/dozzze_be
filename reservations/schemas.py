@@ -9,6 +9,7 @@ class RoomReservationOut(Schema):
     room_type: str
     price: float
     guests: int
+    rate_id: Optional[int] = None
 
     @staticmethod
     def resolve_name(obj):
@@ -22,6 +23,7 @@ class ReservationSchema(Schema):
     currency: str
     room_type: str
     room_type_id: int
+    rate_id: Optional[int] = None
     total_price: float
     check_in: datetime
     check_out: datetime
@@ -63,6 +65,7 @@ class RoomReservationSchema(Schema):
     room_type: str
     price: float
     guests: int
+    rate_id: Optional[int] = None
 
 
 class ReservationClientOut(Schema):
@@ -95,6 +98,7 @@ class ReservationClientOut(Schema):
                 "room_type": rr.room_type.name,
                 "price": rr.price,
                 "guests": rr.guests,
+                "rate_id": rr.rate_id,
             }
             for rr in obj.reservations.all()
         ]

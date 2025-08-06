@@ -15,6 +15,7 @@ class ReservationRoom(models.Model):
     )
     price = models.FloatField(null=True, blank=True)
     guests = models.IntegerField(default=1, verbose_name="Cantidad de huéspedes")
+    rate_id = models.IntegerField(null=True, blank=True, verbose_name="ID de tarifa")
 
     class Meta:
         db_table = "reservation_rooms"
