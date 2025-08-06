@@ -85,6 +85,7 @@ class ReservationClientOut(Schema):
     total_price: float
     original_price: Optional[float] = None
     discount_amount: float = 0
+    discount_coupon_code: Optional[str] = None
     status: str
 
     @staticmethod
@@ -101,3 +102,7 @@ class ReservationClientOut(Schema):
     @staticmethod
     def resolve_property(obj):
         return obj.property.name if obj.property else None
+
+    @staticmethod
+    def resolve_discount_coupon_code(obj):
+        return obj.discount_coupon.code if obj.discount_coupon else None

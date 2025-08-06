@@ -160,3 +160,8 @@ class ReservationAPITest(TestCase):
         self.assertEqual(float(reservation.discount_amount), 10)
         self.assertEqual(reservation.discount_coupon, coupon)
         mock_pay.assert_called_once()
+        list_response = self.client.get("/api/reservations/my")
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(
+            list_response.json()[0]["discount_coupon_code"], coupon.code
+        )
