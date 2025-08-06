@@ -18,13 +18,13 @@ class Migration(migrations.Migration):
             name="description",
             field=models.TextField(blank=True, verbose_name="Descripción"),
         ),
-        migrations.RemoveField(
-            model_name="service",
-            name="property",
-        ),
         migrations.AlterUniqueTogether(
             name="service",
             unique_together=set(),
+        ),
+        migrations.RemoveField(
+            model_name="service",
+            name="property",
         ),
         migrations.CreateModel(
             name="PropertyService",
