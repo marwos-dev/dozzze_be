@@ -26,6 +26,8 @@ from .schemas import (
     RoomTypeImageOut,
     RoomTypeOut,
     RoomTypeUpdateIn,
+    ServiceIn,
+    ServiceOut,
 )
 from .services import PropertyService
 
@@ -110,6 +112,11 @@ def get_rooms(
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
+@router.get("/services", response=List[ServiceOut])
+def list_services(request):
+    return PropertyService.list_services()
+
+
 # ----------------------- Staff management endpoints -----------------------
 
 
@@ -186,6 +193,46 @@ def add_property_image(
 )
 def delete_property_image(request, property_id: int, image_id: int):
     return PropertyService.delete_property_image(request.user, property_id, image_id)
+
+
+@router.get(
+    "/my/{property_id}/services",
+    response=List[ServiceOut],
+    auth=AuthBearer(),
+)
+def list_property_services(request, property_id: int):
+    return PropertyService.list_property_services(request.user, property_id)
+
+
+@router.post(
+    "/my/{property_id}/services",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def add_property_service(request, property_id: int, data: ServiceIn):
+    return PropertyService.add_property_service(request.user, property_id, data)
+
+
+@router.put(
+    "/my/{property_id}/services/{service_id}",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def update_property_service(
+    request, property_id: int, service_id: int, data: ServiceIn
+):
+    return PropertyService.update_property_service(
+        request.user, property_id, service_id, data
+    )
+
+
+@router.delete(
+    "/my/{property_id}/services/{service_id}",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
+def delete_property_service(request, property_id: int, service_id: int):
+    return PropertyService.delete_property_service(request.user, property_id, service_id)
 
 
 @router.get(

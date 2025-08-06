@@ -23,6 +23,7 @@ from .models import (
     PmsDataProperty,
     Property,
     PropertyImage,
+    Service,
     RoomType,
     RoomTypeImage,
 )
@@ -34,6 +35,7 @@ from .schemas import (
     PropertyUpdateIn,
     RoomAvailability,
     RoomTypeUpdateIn,
+    ServiceIn,
 )
 from .sync_service import SyncService
 
@@ -377,6 +379,84 @@ class PropertyService:
             raise APIError("Image not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
         img.delete()
         return SuccessSchema(message="Image deleted")
+
+    @staticmethod
+    def list_services() -> List[Service]:
+        return list(Service.objects.all())
+
+    @staticmethod
+    def list_property_services(user, property_id: int) -> List[Service]:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        return list(prop.services.all())
+
+    
+    @staticmethod
+    def add_property_service(user, property_id: int, data: ServiceIn) -> Service:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        service, _ = Service.objects.get_or_create(
+            code=data.code,
+            defaults={
+                "name": data.name,
+                "description": data.description or "",
+            },
+        )
+        prop.services.add(service)
+        return service
+
+    @staticmethod
+    def update_property_service(
+        user, property_id: int, service_id: int, data: ServiceIn
+    ) -> Service:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        service = prop.services.filter(id=service_id).first()
+        if not service:
+            raise APIError(
+                "Service not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        for attr, value in data.dict(exclude_unset=True).items():
+            setattr(service, attr, value)
+        service.save()
+        return service
+
+    @staticmethod
+    def delete_property_service(
+        user, property_id: int, service_id: int
+    ) -> SuccessSchema:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        service = prop.services.filter(id=service_id).first()
+        if not service:
+            raise APIError(
+                "Service not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        prop.services.remove(service)
+        if not service.properties.exists():
+            service.delete()
+        return SuccessSchema(message="Service deleted")
+
 
     @staticmethod
     def list_room_type_images(user, room_type_id: int) -> List[RoomTypeImage]:

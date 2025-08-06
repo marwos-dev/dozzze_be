@@ -31,11 +31,22 @@ class AvailabilityOut(Schema):
     rates: List[Rate]
 
 
+class ServiceIn(Schema):
+    code: str
+    name: str
+    description: Optional[str] = None
+
+
+class ServiceOut(ServiceIn):
+    id: int
+
+
 class RoomTypeOut(Schema):
     id: int
     name: str
     description: Optional[str] = None
     images: Optional[List[str]] = None
+    services: Optional[List[ServiceOut]] = None
 
     @staticmethod
     def resolve_images(obj):
@@ -48,20 +59,29 @@ class RoomTypeOut(Schema):
             else []
         )
 
+    @staticmethod
+    def resolve_services(obj):
+        if obj.property and obj.property.services.exists():
+            return [
+                ServiceOut(
+                    id=service.id,
+                    code=service.code,
+                    name=service.name,
+                    description=service.description,
+                )
+                for service in obj.property.services.all()
+            ]
+        return []
+
 
 class RoomOut(Schema):
     id: int
     name: str
     description: str
     pax: int
-    services: List[str]
     images: Optional[List[str]]
     property_id: int
     type: str
-
-    @staticmethod
-    def resolve_services(obj):
-        return [service.name for service in obj.services.all()] if obj.services else []
 
     @staticmethod
     def resolve_images(obj):
@@ -103,6 +123,7 @@ class PropertyOut(Schema):
     communication_methods: Optional[List[str]]
     location: Optional[str]
     terms_and_conditions: Optional[TermsAndConditionsOut] = None
+    services: Optional[List[ServiceOut]] = None
 
     @staticmethod
     def resolve_zone(obj):
@@ -130,6 +151,20 @@ class PropertyOut(Schema):
             if obj.communication_methods
             else []
         )
+
+    @staticmethod
+    def resolve_services(obj):
+        if obj.services.exists():
+            return [
+                ServiceOut(
+                    id=service.id,
+                    code=service.code,
+                    name=service.name,
+                    description=service.description,
+                )
+                for service in obj.services.all()
+            ]
+        return []
 
     @staticmethod
     def resolve_location(obj):

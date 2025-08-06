@@ -10,25 +10,40 @@ UserModel = get_user_model()
 
 
 class Service(models.Model):
+    code = models.CharField(max_length=100, unique=True, verbose_name="Código")
     name = models.CharField(max_length=255, verbose_name="Nombre")
-    description = models.TextField(verbose_name="Descripción")
+    description = models.TextField(blank=True, verbose_name="Descripción")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
-    property = models.ForeignKey(
-        "Property",
-        related_name="services",
-        on_delete=models.CASCADE,
-        verbose_name="Propiedad",
-    )
 
     class Meta:
         db_table = "services"
         verbose_name = "Servicio"
         verbose_name_plural = "Servicios"
         ordering = ["name"]
-        unique_together = ("name",)
 
     def __str__(self):
         return self.name
+
+
+class PropertyService(models.Model):
+    property = models.ForeignKey(
+        "Property",
+        related_name="property_services",
+        on_delete=models.CASCADE,
+        verbose_name="Propiedad",
+    )
+    service = models.ForeignKey(
+        Service,
+        related_name="property_services",
+        on_delete=models.CASCADE,
+        verbose_name="Servicio",
+    )
+
+    class Meta:
+        db_table = "property_services"
+        verbose_name = "Servicio de Propiedad"
+        verbose_name_plural = "Servicios de Propiedades"
+        unique_together = ("property", "service")
 
 
 def property_cover_image_upload_path(instance, filename):
@@ -76,6 +91,13 @@ class Property(models.Model):
         default=False,
         verbose_name="Usar información del PMS",
         help_text="Si está marcado, se utilizará la información del PMS para esta propiedad.",
+    )
+    services = models.ManyToManyField(
+        Service,
+        through="PropertyService",
+        related_name="properties",
+        verbose_name="Servicios",
+        blank=True,
     )
 
     class Meta:
