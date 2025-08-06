@@ -36,13 +36,30 @@ mediante PostGIS.
 
 ## ⚙️ Configuración del entorno
 
-1. Copiá el archivo `.env.example` y completá tus variables:
-   ```bash
-   cp .env.example .env
+### Desarrollo
 
-2. Incia el proyecto con Docker:
+1. El archivo `.env.dev` contiene valores por defecto para desarrollo. Podés ajustar
+   las variables según necesites.
+2. Levantá el proyecto con Docker:
    ```bash
    docker-compose up -d --build
+   ```
+   Este comando también crea un usuario `admin`/`1234` y datos de ejemplo para que
+   puedas comenzar a trabajar inmediatamente.
+3. También podés correrlo localmente:
+   ```bash
+   pip install -r requirements.txt
+   python manage.py migrate
+   python manage.py seed_demo
+   python manage.py runserver
+   ```
+
+### Producción
+
+1. Copiá el archivo `.env.example` y completá tus variables en un nuevo archivo `.env`.
+2. Construí e iniciá los servicios con:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d --build
    ```
 
 ## 🐳 Servicios Docker
