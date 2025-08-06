@@ -1,6 +1,5 @@
-import json
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import TestCase
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import DiscountCoupon, Voucher
@@ -10,7 +9,6 @@ User = get_user_model()
 
 class VoucherAPITest(TestCase):
     def setUp(self):
-        self.client = Client()
         self.user = User.objects.create(username="owner", password="pass")
         token = AccessToken.for_user(self.user)
         self.client.defaults["HTTP_AUTHORIZATION"] = f"Bearer {token}"

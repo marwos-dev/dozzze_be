@@ -27,8 +27,8 @@ from utils.auth_bearer import AuthBearer
 from utils.error_codes import APIError
 from utils.schemas import ErrorSchema
 from utils.security import PublicAPIKey
-from zones.api import router as zones_router
 from vouchers.api import router as voucher_router
+from zones.api import router as zones_router
 
 public_auth = PublicAPIKey()
 auth_bearer = AuthBearer()
