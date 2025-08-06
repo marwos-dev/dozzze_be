@@ -146,6 +146,12 @@ class Reservation(models.Model):
     )
     currency = models.CharField(verbose_name="Moneda", max_length=3, default="EUR")
     total_price = models.FloatField(verbose_name="Total price", null=True, blank=True)
+    original_price = models.FloatField(
+        verbose_name="Original price", null=True, blank=True
+    )
+    discount_amount = models.FloatField(
+        verbose_name="Discount amount", default=0
+    )
     paid_online = models.FloatField(verbose_name="Paid online", null=True, blank=True)
     pay_on_arrival = models.FloatField(
         verbose_name="Pay on arrival", null=True, blank=True
@@ -185,15 +191,28 @@ class Reservation(models.Model):
 
     def apply_coupon(self, coupon):
         if coupon and coupon.active:
+            if self.original_price is None:
+                self.original_price = self.total_price
             discount = float(self.total_price) * float(coupon.discount_percent) / 100
             self.total_price = float(self.total_price) - discount
+            self.discount_amount = float(self.discount_amount) + discount
             self.discount_coupon = coupon
-            self.save()
+            self.save(
+                update_fields=[
+                    "total_price",
+                    "discount_amount",
+                    "discount_coupon",
+                    "original_price",
+                ]
+            )
 
     def apply_voucher(self, voucher, amount):
+        if self.original_price is None:
+            self.original_price = self.total_price
         voucher.redeem(amount, reservation=self)
         self.total_price = float(self.total_price) - float(amount)
-        self.save(update_fields=["total_price"])
+        self.discount_amount = float(self.discount_amount) + float(amount)
+        self.save(update_fields=["total_price", "discount_amount", "original_price"])
 
     def cancel(self):
         """Mark the reservation as pending refund if cancellation is allowed."""

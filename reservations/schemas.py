@@ -83,6 +83,8 @@ class ReservationClientOut(Schema):
     guest_remarks: Optional[str] = None
     pax_count: int
     total_price: float
+    original_price: Optional[float] = None
+    discount_amount: float = 0
     status: str
 
     @staticmethod
