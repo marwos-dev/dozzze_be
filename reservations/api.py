@@ -170,9 +170,7 @@ def create_reservation(request, payload: ReservationBatchSchema):
                         if reservation.total_price <= 0:
                             reservation.status = Reservation.CONFIRMED
                             reservation.payment_status = "paid"
-                            reservation.save(
-                                update_fields=["status", "payment_status"]
-                            )
+                            reservation.save(update_fields=["status", "payment_status"])
                         remaining_voucher -= amount
 
             payable_reservations = []

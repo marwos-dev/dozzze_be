@@ -276,7 +276,9 @@ class ReservationAPITest(TestCase):
         )
         payload = self._payload(80)
         payload["code"] = voucher.code
-        with patch.object(ReservationRoom.objects, "create", side_effect=Exception("boom")):
+        with patch.object(
+            ReservationRoom.objects, "create", side_effect=Exception("boom")
+        ):
             response = self.client.post(
                 "/api/reservations/",
                 data=json.dumps(payload),
