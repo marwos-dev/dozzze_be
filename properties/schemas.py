@@ -21,6 +21,7 @@ class Price(Schema):
 class Rate(Schema):
     # rate_external_id: Optional[str] = None
     # availability: int  # ForeignKey to Availability, represented as an int for simplicity
+    rate_id: int
     prices: List[Price]
     restriction: Optional[dict] = None  # JSONField for restrictions
 

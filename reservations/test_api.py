@@ -47,6 +47,7 @@ class ReservationAPITest(TestCase):
                     "currency": "EUR",
                     "room_type": self.room_type.name,
                     "room_type_id": self.room_type.id,
+                    "rate_id": 1,
                     "total_price": price,
                     "check_in": self.check_in.isoformat(),
                     "check_out": self.check_out.isoformat(),
