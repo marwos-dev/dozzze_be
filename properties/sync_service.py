@@ -30,7 +30,7 @@ class SyncService:
                 print(f"Room type not found: {rate_data['room_type']}")
                 continue
 
-            date_obj = datetime.strptime(rate_data["date"], "%Y-%m-%d")
+            date_obj = datetime.strptime(rate_data["date"], "%Y-%m-%d").date()
 
             availability = Availability.objects.filter(
                 property=prop,
@@ -67,7 +67,12 @@ class SyncService:
             )
 
         if availabilities_to_create:
-            Availability.objects.bulk_create(availabilities_to_create)
+            Availability.objects.bulk_create(
+                availabilities_to_create,
+                update_conflicts=True,
+                unique_fields=["property", "room_type", "date"],
+                update_fields=["rates", "availability"],
+            )
 
         return True
 
