@@ -40,4 +40,4 @@ COPY . .
 # Exponer el puerto de desarrollo
 EXPOSE 8000
 
-CMD ["bin/dev.sh"]
+CMD ["bin/start.sh"]

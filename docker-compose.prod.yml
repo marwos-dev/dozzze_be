@@ -1,7 +1,6 @@
 version: '3.9'
 
 services:
-
   db:
     image: postgis/postgis:15-3.3
     environment:
@@ -11,7 +10,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-        - "5432:5432"
+      - "5432:5432"
 
   redis:
     image: redis:7-alpine
@@ -22,13 +21,11 @@ services:
     build: .
     ports:
       - "8000:8000"
-
     env_file:
-      - .env.dev
+      - .env
     environment:
-      DJANGO_ENV: development
+      DJANGO_ENV: production
     volumes:
-      - .:/app
       - static_volume:/app/static
       - media_volume:/app/media
     depends_on:
@@ -38,11 +35,12 @@ services:
     build: .
     command: celery -A core worker --loglevel=info --concurrency=4
     env_file:
-      - .env.dev
+      - .env
     environment:
-      DJANGO_ENV: development
+      DJANGO_ENV: production
     volumes:
-      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
     depends_on:
       - redis
       - web
@@ -51,27 +49,15 @@ services:
     build: .
     command: celery -A core beat --loglevel=info
     env_file:
-      - .env.dev
+      - .env
     environment:
-      DJANGO_ENV: development
+      DJANGO_ENV: production
     volumes:
-      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
     depends_on:
       - redis
       - web
-
-#  certbot:
-#    image: certbot/certbot
-#    volumes:
-#      - ./nginx/ssl:/etc/letsencrypt
-#      - ./nginx/ssl-data:/var/www/certbot
-#    entrypoint: >
-#      /bin/sh -c "
-#        sleep 10 &&
-#        certbot certonly --webroot --webroot-path=/var/www/certbot \
-#        --email marwos97@gmail.com --agree-tos --no-eff-email \
-#        -d localhost --non-interactive \
-#      "
 
 volumes:
   static_volume:

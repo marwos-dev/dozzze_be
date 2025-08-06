@@ -14,12 +14,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 GDAL_LIBRARY_PATH = os.getenv("GDAL_LIBRARY_PATH", "/opt/homebrew/lib/libgdal.dylib")
 GEOS_LIBRARY_PATH = os.getenv("GEOS_LIBRARY_PATH", "/opt/homebrew/lib/libgeos_c.dylib")
 
@@ -30,7 +26,7 @@ GEOS_LIBRARY_PATH = os.getenv("GEOS_LIBRARY_PATH", "/opt/homebrew/lib/libgeos_c.
 SECRET_KEY = "django-insecure-(y4si_+axe6qoukrek*a=nfzc97!6d&m6p^&re&)v*m4c)b@3n"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 INSTALLED_APPS = [
     "jazzmin",
@@ -103,7 +99,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.getenv("DB_NAME", "mtr2"),
+        "NAME": os.getenv("DB_NAME", "mtr4"),
         "USER": os.getenv("DB_USER", "marcosolmedo"),
         "PASSWORD": os.getenv("DB_PASSWORD", "40575526"),
         "HOST": os.getenv("DB_HOST", "localhost"),
@@ -215,9 +211,11 @@ JAZZMIN_SETTINGS = {
 }
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-CSRF_TRUSTED_ORIGINS = [
-    "https://dozzzebe-production.up.railway.app",
-]
+CSRF_TRUSTED_ORIGINS = (
+    os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if os.getenv("CSRF_TRUSTED_ORIGINS")
+    else []
+)
 
 # Celery
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
@@ -242,13 +240,9 @@ SIMPLE_JWT = {
 
 PUBLIC_API_KEY = os.getenv("PUBLIC_API_KEY", "clave-larga-y-unica")
 
-DEVELOPMENT = os.getenv("DEVELOPMENT", "false").lower() in ("true", "1", "yes")
-
 # EMAIL
-EMAIL_BACKEND = (
-    "django.core.mail.backends.smtp.EmailBackend"
-    if not DEVELOPMENT
-    else "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
 )
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
@@ -266,12 +260,4 @@ REDSYS_TERMINAL = int(os.getenv("REDSYS_TERMINAL", 19))
 REDSYS_SECRET_KEY = os.getenv("REDSYS_SECRET_KEY", "sq7HjrUOBfKmC576ILgskD5srU870gJ7")
 REDSYS_URL = os.getenv("REDSYS_URL", "https://sis-t.redsys.es:25443/sis/realizarPago")
 
-ALLOWED_HOSTS = [
-    "dozzzebe-production.up.railway.app",
-    "web.motor-reservas.orb.local",
-    "localhost",
-    "127.0.0.1",
-    "d77f-79-116-14-191.ngrok-free.app",
-    "host.docker.internal:8000",
-    "host.docker.internal",
-]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")

@@ -24,5 +24,8 @@ else:
     print("El superusuario ya existe.")
 EOF
 
+echo "Creando datos de ejemplo..."
+python manage.py seed_demo
+
 echo "Levantando servidor..."
 exec python manage.py runserver 0.0.0.0:8000
