@@ -13,7 +13,7 @@ from utils import (
 )
 from utils.auth_bearer import AuthBearer
 
-from .models import Property, Room, RoomType
+from .models import Property, RoomType
 from .schemas import (
     AvailabilityRequest,
     AvailabilityResponse,
@@ -55,15 +55,6 @@ def get_availability(request, data: AvailabilityRequest):
     return PropertyService.get_availability(data)
 
 
-@router.get("/{property_id}", response=PropertyOut, throttle=[UserRateThrottle("1/m")])
-def get_property(request, property_id: int):
-    try:
-        _property = Property.objects.get(id=property_id)
-        return _property
-    except Property.DoesNotExist:
-        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
-
-
 @router.get("/name/{property_name}", response=PropertyOut)
 def get_property_by_name(request, property_name: str):
     return PropertyService.get_property_by_name(property_name)
@@ -79,13 +70,13 @@ def get_property_rooms(request, property_id: int):
 
 
 @router.get(
-    "/rooms/{room_id}", response=RoomTypeOut, throttle=[UserRateThrottle("10/m")]
+    "/rooms/{room_type_id}", response=RoomTypeOut, throttle=[UserRateThrottle("10/m")]
 )
-def get_room(request, room_id: int):
+def get_room_type(request, room_type_id: int):
     try:
-        room = Room.objects.get(id=room_id)
-        return room
-    except Room.DoesNotExist:
+        room_type = RoomType.objects.get(id=room_type_id)
+        return room_type
+    except RoomType.DoesNotExist:
         raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
 
 
@@ -269,3 +260,12 @@ def update_room_type(request, room_type_id: int, data: RoomTypeUpdateIn):
 def sync_property_with_pms(request, property_id: int):
     """Synchronize a property with its PMS."""
     return PropertyService.sync_property_with_pms(request.user, property_id)
+
+
+@router.get("/{property_id}", response=PropertyOut, throttle=[UserRateThrottle("1/m")])
+def get_property(request, property_id: int):
+    try:
+        _property = Property.objects.get(id=property_id)
+        return _property
+    except Property.DoesNotExist:
+        raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
