@@ -26,26 +26,30 @@ router = Router(tags=["reservations"])
 
 @router.post("/", response={200: ReservationOut, 400: ErrorSchema})
 def create_reservation(request, payload: ReservationBatchSchema):
-    reservations = payload.reservations
-    code = payload.code
-    voucher = None
-    coupon = None
-    if code:
-        try:
-            voucher = Voucher.objects.get(code=code, active=True)
-        except Voucher.DoesNotExist:
-            try:
-                coupon = DiscountCoupon.objects.get(code=code, active=True)
-            except DiscountCoupon.DoesNotExist:
-                pass
-    created_reservations = []
-    payable_reservations = []
-    total_amount = Decimal("0.00")
-    descriptions = []
     group_payment_order = rs.generate_numeric_order()
 
     try:
         with transaction.atomic():
+            reservations = payload.reservations
+            code = payload.code
+            voucher = None
+            coupon = None
+            if code:
+                try:
+                    voucher = Voucher.objects.select_for_update().get(
+                        code=code, active=True
+                    )
+                except Voucher.DoesNotExist:
+                    try:
+                        coupon = DiscountCoupon.objects.select_for_update().get(
+                            code=code, active=True
+                        )
+                    except DiscountCoupon.DoesNotExist:
+                        pass
+            created_reservations = []
+            reservation_rooms_data = []
+            descriptions = []
+
             for data in reservations:
                 check_in = data.check_in
                 check_out = data.check_out
@@ -121,46 +125,85 @@ def create_reservation(request, payload: ReservationBatchSchema):
                     payment_order=group_payment_order,  # <- todas comparten el mismo
                 )
 
-                if voucher:
-                    remaining = Decimal(str(reservation.total_price))
-                    if voucher.remaining_amount >= remaining:
-                        reservation.apply_voucher(voucher, remaining)
-                        reservation.status = Reservation.CONFIRMED
-                        reservation.payment_status = "paid"
-                        reservation.save(update_fields=["status", "payment_status"])
-                    else:
-                        redeem_amount = voucher.remaining_amount
-                        reservation.apply_voucher(voucher, redeem_amount)
-                        descriptions.append(f"Voucher {voucher.code}")
-                elif coupon:
-                    reservation.apply_coupon(coupon)
-                    descriptions.append(f"Cupon {coupon.name} ({coupon.code})")
+                created_reservations.append(reservation)
+                reservation_rooms_data.append(
+                    {
+                        "reservation": reservation,
+                        "room_type_id": room_type_id,
+                        "guests": data.pax_count,
+                        "rate_id": data.rate_id,
+                    }
+                )
 
+            if coupon:
+                descriptions.append(f"Cupon {coupon.name} ({coupon.code})")
+                for reservation in created_reservations:
+                    reservation.apply_coupon(coupon)
+
+            if voucher:
+                descriptions.append(f"Voucher {voucher.code}")
+                total_price = sum(
+                    Decimal(str(r.total_price)) for r in created_reservations
+                )
+                voucher_to_apply = min(
+                    Decimal(str(voucher.remaining_amount)), total_price
+                )
+                remaining_voucher = voucher_to_apply
+                for idx, reservation in enumerate(created_reservations):
+                    if remaining_voucher <= 0:
+                        break
+                    proportion = (
+                        Decimal(str(reservation.total_price)) / total_price
+                        if total_price > 0
+                        else Decimal("0")
+                    )
+                    if idx == len(created_reservations) - 1:
+                        amount = remaining_voucher
+                    else:
+                        amount = (voucher_to_apply * proportion).quantize(
+                            Decimal("0.01")
+                        )
+                        if amount > remaining_voucher:
+                            amount = remaining_voucher
+                    if amount > 0:
+                        reservation.apply_voucher(voucher, amount)
+                        if reservation.total_price <= 0:
+                            reservation.status = Reservation.CONFIRMED
+                            reservation.payment_status = "paid"
+                            reservation.save(
+                                update_fields=["status", "payment_status"]
+                            )
+                        remaining_voucher -= amount
+
+            payable_reservations = []
+            total_amount = Decimal("0.00")
+            for reservation in created_reservations:
                 if reservation.total_price > 0:
                     payable_reservations.append(reservation)
                     total_amount += Decimal(str(reservation.total_price))
 
-                created_reservations.append(reservation)
-
+            for room_data in reservation_rooms_data:
                 ReservationRoom.objects.create(
-                    reservation=reservation,
-                    room_type_id=room_type_id,
-                    guests=data.pax_count,
-                    price=reservation.total_price,
-                    rate_id=data.rate_id,
+                    reservation=room_data["reservation"],
+                    room_type_id=room_data["room_type_id"],
+                    guests=room_data["guests"],
+                    price=room_data["reservation"].total_price,
+                    rate_id=room_data["rate_id"],
                 )
 
-        if total_amount > 0:
-            redsys_args = rs.prepare_payment_for_group(
-                payable_reservations,
-                total_amount,
-                request,
-                group_payment_order,
-                description=", ".join(descriptions) if descriptions else None,
-            )
-            return {"success": True, "redsys_args": redsys_args}
+            if total_amount > 0:
+                redsys_args = rs.prepare_payment_for_group(
+                    payable_reservations,
+                    total_amount,
+                    request,
+                    group_payment_order,
+                    description=", ".join(descriptions) if descriptions else None,
+                )
+                response_data = {"success": True, "redsys_args": redsys_args}
+            else:
+                response_data = {"success": True, "redsys_args": None}
 
-        return {"success": True, "redsys_args": None}
+        return response_data
 
     except Exception as e:
         raise APIError(
