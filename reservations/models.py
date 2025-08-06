@@ -1,15 +1,13 @@
-from django.core.exceptions import ValidationError
 from django.db import models
 
-from properties.models import Room, RoomType
+from properties.models import RoomType
 from utils.error_codes import ReservationError, ReservationErrorCode
 
 
 class ReservationRoom(models.Model):
     reservation = models.ForeignKey(
-        "Reservation", on_delete=models.CASCADE, related_name="reservations"
+        "Reservation", on_delete=models.CASCADE, related_name="reservation_rooms"
     )
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, null=True, blank=True)
     room_type = models.ForeignKey(
         RoomType, on_delete=models.CASCADE, null=True, blank=True
     )
@@ -21,18 +19,6 @@ class ReservationRoom(models.Model):
         unique_together = ("reservation", "room_type")
         verbose_name = "Habitación reservada"
         verbose_name_plural = "Habitaciones reservadas"
-
-    def clean(self):
-        overlapping = ReservationRoom.objects.filter(
-            room=self.room,
-            reservation__check_in__lt=self.reservation.check_out,
-            reservation__check_out__gt=self.reservation.check_in,
-        ).exclude(reservation=self.reservation)
-
-        if overlapping.exists():
-            raise ValidationError(
-                "La habitación ya está reservada en ese rango de fechas."
-            )
 
 
 class Reservation(models.Model):
@@ -62,16 +48,11 @@ class Reservation(models.Model):
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="pending", verbose_name="Estado"
     )
-    rooms = models.ManyToManyField(
-        Room,
+    room_types = models.ManyToManyField(
+        RoomType,
         through="ReservationRoom",
         related_name="reservations",
     )
-    # room_type = models.ForeignKey(
-    #     "properties.RoomType",
-    #     on_delete=models.CASCADE,
-    #     related_name="reservations",
-    # )
     guest_corporate = models.CharField(
         max_length=255,
         verbose_name="Nombre de la empresa del huésped",
@@ -176,12 +157,18 @@ class Reservation(models.Model):
         verbose_name_plural = "Reservas"
 
     def __str__(self):
-        rooms = ", ".join([room.name for room in self.rooms.all()])
-        return f"Reserva en {rooms} del {self.check_in} al {self.check_out}"
+        room_types = ", ".join(
+            {
+                rr.room_type.name
+                for rr in self.reservation_rooms.select_related("room_type").all()
+                if rr.room_type
+            }
+        )
+        return f"Reserva en {room_types} del {self.check_in} al {self.check_out}"
 
     def get_room_types(self):
-        room_types = self.reservations.select_related("room_type").all()
-        return ", ".join(set(rr.room_type.name for rr in room_types if rr.room_type))
+        room_types = self.reservation_rooms.select_related("room_type").all()
+        return ", ".join({rr.room_type.name for rr in room_types if rr.room_type})
 
     def apply_coupon(self, coupon):
         if coupon and coupon.active:

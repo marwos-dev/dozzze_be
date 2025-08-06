@@ -31,6 +31,17 @@ class AvailabilityOut(Schema):
     rates: List[Rate]
 
 
+class ServiceIn(Schema):
+    name: str
+    description: Optional[str] = None
+
+
+class ServiceOut(Schema):
+    id: int
+    name: str
+    description: Optional[str] = None
+
+
 class RoomTypeOut(Schema):
     id: int
     name: str
@@ -47,36 +58,6 @@ class RoomTypeOut(Schema):
             if obj.images
             else []
         )
-
-
-class RoomOut(Schema):
-    id: int
-    name: str
-    description: str
-    pax: int
-    services: List[str]
-    images: Optional[List[str]]
-    property_id: int
-    type: str
-
-    @staticmethod
-    def resolve_services(obj):
-        return [service.name for service in obj.services.all()] if obj.services else []
-
-    @staticmethod
-    def resolve_images(obj):
-        return (
-            [
-                generate_presigned_url(room_image.image.name)
-                for room_image in obj.images.all()
-            ]
-            if obj.images
-            else []
-        )
-
-    @staticmethod
-    def resolve_type(obj):
-        return obj.type.name if obj.type else None
 
 
 class TermsAndConditionsOut(Schema):
@@ -100,6 +81,7 @@ class PropertyOut(Schema):
     cover_image: Optional[str]
     images: Optional[List[str]]
     room_types: Optional[List[RoomTypeOut]]
+    services: Optional[List[ServiceOut]]
     communication_methods: Optional[List[str]]
     location: Optional[str]
     terms_and_conditions: Optional[TermsAndConditionsOut] = None
@@ -143,11 +125,11 @@ class PropertyOut(Schema):
 
     @staticmethod
     def resolve_room_types(obj):
-        room_types = set()
-        for room in obj.rooms.all():
-            if room.type:
-                room_types.add(room.type)
-        return list(room_types) if room_types else None
+        return obj.room_types.all()
+
+    @staticmethod
+    def resolve_services(obj):
+        return obj.services.all()
 
 
 class RoomAvailability(Schema):

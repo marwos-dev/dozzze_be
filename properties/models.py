@@ -11,7 +11,9 @@ UserModel = get_user_model()
 
 class Service(models.Model):
     name = models.CharField(max_length=255, verbose_name="Nombre")
-    description = models.TextField(verbose_name="Descripción")
+    description = models.TextField(
+        verbose_name="Descripción", blank=True, null=True
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Creado el")
     property = models.ForeignKey(
         "Property",
@@ -25,7 +27,7 @@ class Service(models.Model):
         verbose_name = "Servicio"
         verbose_name_plural = "Servicios"
         ordering = ["name"]
-        unique_together = ("name",)
+        unique_together = ("property", "name")
 
     def __str__(self):
         return self.name
@@ -146,11 +148,6 @@ class RoomType(models.Model):
     def __str__(self):
         return self.name
 
-    def photos_of_room_type(self):
-        return self.rooms.filter(images__isnull=False).values_list(
-            "images__image", flat=True
-        )
-
 
 class RoomTypeImage(models.Model):
     room_type = models.ForeignKey(
@@ -173,61 +170,6 @@ class RoomTypeImage(models.Model):
 
     def __str__(self):
         return f"Image of {self.room_type.name}"
-
-
-class Room(models.Model):
-    property = models.ForeignKey(
-        Property, related_name="rooms", on_delete=models.CASCADE
-    )
-    type = models.ForeignKey(
-        RoomType,
-        related_name="rooms",
-        on_delete=models.CASCADE,
-        verbose_name="Tipo de Habitación",
-        null=True,
-        blank=True,
-    )
-    name = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    pax = models.PositiveIntegerField()
-    external_id = models.CharField(max_length=255, null=True, blank=True)
-    external_room_type_id = models.CharField(max_length=255, null=True, blank=True)
-    external_room_type_name = models.CharField(max_length=255, null=True, blank=True)
-
-    class Meta:
-        db_table = "rooms"
-        verbose_name = "Habitación"
-        verbose_name_plural = "Habitaciones"
-        ordering = ["name"]
-        unique_together = ("name", "property")
-
-    def __str__(self):
-        return f"{self.name} - {self.property.name}"
-
-    def is_available(self, check_in, check_out):
-        return not self.reservations.filter(
-            check_in__lt=check_out, check_out__gt=check_in
-        ).exists()
-
-
-def room_image_upload_path(instance, filename):
-    return f"properties/gallery/{uuid4()}-{filename}"
-
-
-class RoomImage(models.Model):
-    room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
-    image = models.ImageField(
-        upload_to=room_image_upload_path, storage=S3Boto3Storage()
-    )
-
-    class Meta:
-        db_table = "room_images"
-        verbose_name = "Imagen de Habitación"
-        verbose_name_plural = "Imágenes de Habitaciones"
-        ordering = ["-id"]
-
-    def __str__(self):
-        return f"Image de {self.room.name}"
 
 
 class CommunicationMethod(models.Model):

@@ -11,13 +11,11 @@ from properties.admin_utils.inlines import (
     CommunicationMethodInline,
     PMSDataInline,
     PropertyImageInline,
-    RoomImageInline,
-    RoomInline,
     RoomTypeImageInline,
     RoomTypeInline,
     TermsAndConditionsInline,
 )
-from properties.models import CommunicationMethod, Property, Room, RoomType, Service
+from properties.models import CommunicationMethod, Property, RoomType, Service
 
 from .sync_service import SyncService
 
@@ -35,7 +33,7 @@ class PropertyAdmin(GISModelAdmin):
         CommunicationMethodInline,
         TermsAndConditionsInline,
     ]  # add "current_reservations"
-    search_fields = ["name", "location", "rooms__pax"]
+    search_fields = ["name", "location", "room_types__name"]
     list_display = (
         "name",
         "cover_preview",
@@ -210,20 +208,6 @@ class PropertyAdmin(GISModelAdmin):
             )
             return False
 
-        sync_rooms = SyncService.sync_rooms(prop, helper)
-        if sync_rooms:
-            self.message_user(
-                request,
-                f"Habitaciones de la propiedad {prop.name} actualizadas correctamente.",
-                level=messages.SUCCESS,
-            )
-        else:
-            self.message_user(
-                request,
-                f"No se encontraron habitaciones para la propiedad {prop.name}.",
-                level=messages.ERROR,
-            )
-
         sync_reservations = SyncService.sync_reservations(prop, helper, request.user)
         if sync_reservations:
             self.message_user(
@@ -344,20 +328,6 @@ class PropertyAdmin(GISModelAdmin):
         )
 
 
-@admin.register(Room)
-class RoomAdmin(admin.ModelAdmin):
-    inlines = [RoomImageInline]  # ReservationInline
-    list_display = ("name", "property", "pax")
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if request.user.is_staff:
-            return qs.filter(property__owner=request.user)
-        return qs.none()
-
-
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -387,12 +357,12 @@ class CommunicationMethodAdmin(admin.ModelAdmin):
 @admin.register(RoomType)
 class RoomTypeAdmin(admin.ModelAdmin):
     list_display = ("name",)
-    inlines = [RoomInline, RoomTypeImageInline]
+    inlines = [RoomTypeImageInline]
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
         if request.user.is_staff:
-            return qs.filter(rooms__property__owner=request.user)
+            return qs.filter(property__owner=request.user)
         return qs.none()

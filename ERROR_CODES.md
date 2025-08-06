@@ -24,7 +24,7 @@ The frontend can map these codes to custom messages for the user.
 |203|Could not parse rates|
 |204|No price found for requested guests|
 |205|No availability for the selected dates|
-|206|Room not found|
+|206|Room type not found|
 |207|Zone ID or Property ID is required|
 
 ## Customer Errors (300-399)

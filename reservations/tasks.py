@@ -17,7 +17,7 @@ def send_check_in_reminder(days_before: int):
         guest_email__isnull=False,
     )
     for reservation in reservations:
-        rooms = reservation.rooms.all()
+        room_types = reservation.room_types.all()
         EmailService.send_email(
             subject="Recordatorio de reserva",
             to_email=reservation.guest_email,
@@ -25,7 +25,7 @@ def send_check_in_reminder(days_before: int):
             context={
                 "reservation": reservation,
                 "property": reservation.property,
-                "rooms": rooms,
+                "room_types": room_types,
                 "days_before": days_before,
             },
         )

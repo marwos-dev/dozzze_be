@@ -9,8 +9,10 @@ from django.utils.text import slugify
 
 from pms.models import PMS
 from pms.utils.property_helper_factory import PMSHelperFactory
+from pms.utils.errors import PmsUnauthorized
 from utils import (
     APIError,
+    CustomerErrorCode,
     PropertyErrorCode,
     SecurityErrorCode,
     SuccessSchema,
@@ -25,6 +27,7 @@ from .models import (
     PropertyImage,
     RoomType,
     RoomTypeImage,
+    Service,
 )
 from .schemas import (
     AvailabilityRequest,
@@ -34,6 +37,7 @@ from .schemas import (
     PropertyUpdateIn,
     RoomAvailability,
     RoomTypeUpdateIn,
+    ServiceIn,
 )
 from .sync_service import SyncService
 
@@ -379,12 +383,79 @@ class PropertyService:
         return SuccessSchema(message="Image deleted")
 
     @staticmethod
+    def list_services(user, property_id: int) -> List[Service]:
+        """List services for a property owned by the user."""
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        return list(prop.services.all())
+
+    @staticmethod
+    def create_service(user, property_id: int, data: ServiceIn) -> Service:
+        """Create a service for a property owned by the user."""
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        return Service.objects.create(property=prop, **data.dict())
+
+    @staticmethod
+    def update_service(
+        user, property_id: int, service_id: int, data: ServiceIn
+    ) -> Service:
+        """Update a service for a property owned by the user."""
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        service = Service.objects.filter(id=service_id, property=prop).first()
+        if not service:
+            raise APIError(
+                "Service not found", PropertyErrorCode.SERVICE_NOT_FOUND, 404
+            )
+        payload = data.dict(exclude_unset=True)
+        for attr, value in payload.items():
+            setattr(service, attr, value)
+        service.save()
+        return service
+
+    @staticmethod
+    def delete_service(user, property_id: int, service_id: int) -> SuccessSchema:
+        """Delete a service from a property owned by the user."""
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        prop = Property.objects.filter(id=property_id, owner=user).first()
+        if not prop:
+            raise APIError(
+                "Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
+            )
+        service = Service.objects.filter(id=service_id, property=prop).first()
+        if not service:
+            raise APIError(
+                "Service not found", PropertyErrorCode.SERVICE_NOT_FOUND, 404
+            )
+        service.delete()
+        return SuccessSchema(message="Service deleted")
+
+    @staticmethod
     def list_room_type_images(user, room_type_id: int) -> List[RoomTypeImage]:
         if not user.is_staff:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         rt = RoomType.objects.filter(id=room_type_id, property__owner=user).first()
         if not rt:
-            raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
+            raise APIError(
+                "Room type not found", PropertyErrorCode.ROOM_TYPE_NOT_FOUND, 404
+            )
         return list(rt.images.all())
 
     @staticmethod
@@ -393,7 +464,9 @@ class PropertyService:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         rt = RoomType.objects.filter(id=room_type_id, property__owner=user).first()
         if not rt:
-            raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
+            raise APIError(
+                "Room type not found", PropertyErrorCode.ROOM_TYPE_NOT_FOUND, 404
+            )
         img = RoomTypeImage.objects.create(room_type=rt, image=image)
         return img
 
@@ -405,7 +478,9 @@ class PropertyService:
 
         rt = RoomType.objects.filter(id=room_type_id, property__owner=user).first()
         if not rt:
-            raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
+            raise APIError(
+                "Room type not found", PropertyErrorCode.ROOM_TYPE_NOT_FOUND, 404
+            )
 
         payload = data.dict(exclude_unset=True)
         for attr, value in payload.items():
@@ -431,10 +506,17 @@ class PropertyService:
                 "PMS helper not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404
             )
 
-        SyncService.sync_property_detail(prop, helper)
-        SyncService.sync_rooms(prop, helper)
-        SyncService.sync_reservations(prop, helper, user)
-        SyncService.sync_rates_and_availability(prop, helper)
+        try:
+            SyncService.sync_property_detail(prop, helper)
+            SyncService.sync_rooms(prop, helper)
+            SyncService.sync_reservations(prop, helper, user)
+            SyncService.sync_rates_and_availability(prop, helper)
+        except PmsUnauthorized:
+            raise APIError(
+                "Invalid PMS credentials",
+                CustomerErrorCode.INVALID_CREDENTIALS,
+                401,
+            )
 
         try:
             pms_data = prop.pms_data

@@ -93,7 +93,7 @@ class ReservationClientOut(Schema):
                 "price": rr.price,
                 "guests": rr.guests,
             }
-            for rr in obj.reservations.all()
+            for rr in obj.reservation_rooms.all()
         ]
 
     @staticmethod

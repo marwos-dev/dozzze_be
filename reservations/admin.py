@@ -10,7 +10,11 @@ from .models import Reservation
 class ReservationAdmin(admin.ModelAdmin):
     list_display = ("guest_name", "check_in", "check_out", "status", "created_at")
     list_filter = ("check_in", "check_out")
-    search_fields = ("guest_name", "guest_email", "reservations__room_type__name")
+    search_fields = (
+        "guest_name",
+        "guest_email",
+        "reservation_rooms__room_type__name",
+    )
     exclude = ("user",)
     readonly_fields = ("room_types_reserved",)
     actions = ["cancel_reservations", "mark_refunded"]
@@ -27,8 +31,8 @@ class ReservationAdmin(admin.ModelAdmin):
         return qs.filter(user=request.user)
 
     def room_types_reserved(self, obj):
-        room_types = obj.reservations.select_related("room_type").all()
-        return ", ".join(set(rr.room_type.name for rr in room_types if rr.room_type))
+        room_types = obj.reservation_rooms.select_related("room_type").all()
+        return ", ".join({rr.room_type.name for rr in room_types if rr.room_type})
 
     def cancel_reservations(self, request, queryset):
         for reservation in queryset:

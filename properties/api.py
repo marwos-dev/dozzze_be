@@ -13,7 +13,7 @@ from utils import (
 )
 from utils.auth_bearer import AuthBearer
 
-from .models import Property, Room, RoomType
+from .models import Property, RoomType
 from .schemas import (
     AvailabilityRequest,
     AvailabilityResponse,
@@ -26,6 +26,8 @@ from .schemas import (
     RoomTypeImageOut,
     RoomTypeOut,
     RoomTypeUpdateIn,
+    ServiceIn,
+    ServiceOut,
 )
 from .services import PropertyService
 
@@ -67,8 +69,8 @@ def get_property_by_name(request, property_name: str):
     return PropertyService.get_property_by_name(property_name)
 
 
-@router.get("/{property_id}/rooms", response=List[RoomTypeOut])
-def get_property_rooms(request, property_id: int):
+@router.get("/{property_id}/room-types", response=List[RoomTypeOut])
+def get_property_room_types(request, property_id: int):
     try:
         _property = Property.objects.get(id=property_id)
         return _property.room_types.all()
@@ -76,19 +78,8 @@ def get_property_rooms(request, property_id: int):
         raise APIError("Property not found", PropertyErrorCode.PROPERTY_NOT_FOUND, 404)
 
 
-@router.get(
-    "/rooms/{room_id}", response=RoomTypeOut, throttle=[UserRateThrottle("10/m")]
-)
-def get_room(request, room_id: int):
-    try:
-        room = Room.objects.get(id=room_id)
-        return room
-    except Room.DoesNotExist:
-        raise APIError("Room not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
-
-
-@router.get("/rooms", response=List[RoomTypeOut])
-def get_rooms(
+@router.get("/room-types", response=List[RoomTypeOut])
+def get_room_types(
     request,
     zone_id: Optional[int] = Query(),
     property_id: Optional[int] = Query(None),
@@ -186,6 +177,50 @@ def add_property_image(
 )
 def delete_property_image(request, property_id: int, image_id: int):
     return PropertyService.delete_property_image(request.user, property_id, image_id)
+
+
+@router.get(
+    "/my/{property_id}/services",
+    response=List[ServiceOut],
+    auth=AuthBearer(),
+)
+def list_services(request, property_id: int):
+    """List services for a property owned by the authenticated user."""
+    return PropertyService.list_services(request.user, property_id)
+
+
+@router.post(
+    "/my/{property_id}/services",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def create_service(request, property_id: int, data: ServiceIn):
+    """Create a service for a property owned by the authenticated user."""
+    return PropertyService.create_service(request.user, property_id, data)
+
+
+@router.put(
+    "/my/{property_id}/services/{service_id}",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def update_service(
+    request, property_id: int, service_id: int, data: ServiceIn
+):
+    """Update a service for a property owned by the authenticated user."""
+    return PropertyService.update_service(
+        request.user, property_id, service_id, data
+    )
+
+
+@router.delete(
+    "/my/{property_id}/services/{service_id}",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
+def delete_service(request, property_id: int, service_id: int):
+    """Delete a service from a property owned by the authenticated user."""
+    return PropertyService.delete_service(request.user, property_id, service_id)
 
 
 @router.get(

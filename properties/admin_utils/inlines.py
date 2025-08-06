@@ -4,23 +4,10 @@ from properties.models import (
     CommunicationMethod,
     PmsDataProperty,
     PropertyImage,
-    Room,
-    RoomImage,
     RoomType,
     RoomTypeImage,
     TermsAndConditions,
 )
-
-
-class RoomImageInline(admin.TabularInline):
-    model = RoomImage
-    extra = 1
-
-
-class RoomInline(admin.StackedInline):
-    model = Room
-    extra = 1
-    show_change_link = True
 
 
 class TermsAndConditionsInline(admin.StackedInline):

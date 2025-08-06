@@ -200,7 +200,6 @@ JAZZMIN_SETTINGS = {
         "zones.Zone": "fas fa-map-marked-alt",
         "properties.Property": "fas fa-building",
         "reservations.Reservartion": "fas fa-calendar-check",
-        "properties.Room": "fas fa-door-open",
         "properties.CommunicationMethod": "fas fa-comment-dots",
         "properties.Service": "fas fa-concierge-bell",
         "vouchers.Voucher": "fas fa-ticket-alt",

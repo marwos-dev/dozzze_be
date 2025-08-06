@@ -3,9 +3,8 @@ import json
 from datetime import datetime
 
 from reservations.models import Reservation, ReservationRoom
-from utils import extract_pax
 
-from .models import Availability, Property, Room, RoomType
+from .models import Availability, Property, RoomType
 
 
 class SyncService:
@@ -122,39 +121,27 @@ class SyncService:
         if not rooms_grouped_by_type:
             return False
 
-        # Aquí podrías guardar las habitaciones en la base de datos si es necesario
-        for room_type_id in rooms_grouped_by_type:
-            for room in rooms_grouped_by_type[room_type_id]:
-                # Asegúrate de que room tenga los campos necesarios
-                # if "taquilla" in room["external_room_type_name"].lower():
-                #     continue
-                room_type = RoomType.objects.filter(
+        for rooms in rooms_grouped_by_type.values():
+            for room in rooms:
+                RoomType.objects.update_or_create(
                     property=prop,
                     external_id=room["external_room_type_id"],
-                    name=room["external_room_type_name"],
-                ).first()
-
-                if not room_type:
-                    room_type = RoomType.objects.create(
-                        property=prop,
-                        external_id=room["external_room_type_id"],
-                        name=room["external_room_type_name"],
-                    )
-
-                pax = extract_pax(room["external_room_type_name"])
-                Room.objects.update_or_create(
-                    property=prop,
-                    name=room["name"],
-                    type=room_type,
-                    external_id=room.get("external_id", ""),
-                    external_room_type_id=room.get("external_room_type_id", ""),
-                    external_room_type_name=room.get("external_room_type_name", ""),
-                    pax=pax,
-                    defaults={
-                        "description": room.get("description", ""),
-                    },
+                    defaults={"name": room["external_room_type_name"]},
                 )
+                # Room model has been removed; room-level syncing is disabled
+                # pax = extract_pax(room["external_room_type_name"])
+                # Room.objects.update_or_create(
+                #     property=prop,
+                #     name=room["name"],
+                #     type=room_type,
+                #     external_id=room.get("external_id", ""),
+                #     external_room_type_id=room.get("external_room_type_id", ""),
+                #     external_room_type_name=room.get("external_room_type_name", ""),
+                #     pax=pax,
+                #     defaults={"description": room.get("description", "")},
+                # )
         return True
+
 
     @classmethod
     def sync_reservations(cls, prop: Property, helper, user=None):

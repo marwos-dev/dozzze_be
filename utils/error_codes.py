@@ -44,8 +44,9 @@ class PropertyErrorCode(IntEnum):
     RATES_PARSE_ERROR = 203
     PRICE_NOT_FOUND = 204
     NO_AVAILABILITY = 205
-    ROOM_NOT_FOUND = 206
+    ROOM_TYPE_NOT_FOUND = 206
     ZONE_OR_PROPERTY_REQUIRED = 207
+    SERVICE_NOT_FOUND = 208
 
 
 class CustomerErrorCode(IntEnum):
