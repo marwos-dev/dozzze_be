@@ -18,7 +18,6 @@ class ReservationRoom(models.Model):
 
     class Meta:
         db_table = "reservation_rooms"
-        unique_together = ("reservation", "room_type")
         verbose_name = "Habitación reservada"
         verbose_name_plural = "Habitaciones reservadas"
 

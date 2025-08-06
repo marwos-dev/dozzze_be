@@ -19,6 +19,14 @@ class Command(BaseCommand):
         admin.is_staff = True
         admin.is_superuser = True
         admin.save()
+        staff, _ = User.objects.get_or_create(
+            username="staff",
+            defaults={"email": "staff@example.com"},
+        )
+        staff.set_password("1234")
+        staff.is_staff = True
+        staff.save()
+
         zone, _ = Zone.objects.get_or_create(
             name="Zona Demo",
             defaults={"description": "Zona de ejemplo"},
