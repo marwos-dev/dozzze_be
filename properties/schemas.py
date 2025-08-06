@@ -184,11 +184,7 @@ class PropertyOut(Schema):
 
     @staticmethod
     def resolve_room_types(obj):
-        room_types = set()
-        for room in obj.rooms.all():
-            if room.type:
-                room_types.add(room.type)
-        return list(room_types) if room_types else None
+        return obj.room_types.all()
 
 
 class RoomAvailability(Schema):
