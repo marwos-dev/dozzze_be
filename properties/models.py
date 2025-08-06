@@ -385,6 +385,7 @@ class Availability(models.Model):
         db_table = "availability"
         verbose_name = "Disponibilidad"
         verbose_name_plural = "Disponibilidades"
+        unique_together = ("property", "room_type", "date")
         ordering = ["-date"]
 
     @classmethod
