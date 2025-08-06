@@ -149,9 +149,7 @@ class Reservation(models.Model):
     original_price = models.FloatField(
         verbose_name="Original price", null=True, blank=True
     )
-    discount_amount = models.FloatField(
-        verbose_name="Discount amount", default=0
-    )
+    discount_amount = models.FloatField(verbose_name="Discount amount", default=0)
     paid_online = models.FloatField(verbose_name="Paid online", null=True, blank=True)
     pay_on_arrival = models.FloatField(
         verbose_name="Pay on arrival", null=True, blank=True
