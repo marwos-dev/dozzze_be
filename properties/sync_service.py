@@ -13,6 +13,10 @@ class SyncService:
     def sync_rates_and_availability(
         cls, prop: Property, helper, checkin=None, checkout=None
     ):
+        if prop.pms_data is None:
+            print(f"No PMS data for property: {prop.name}")
+            return False
+
         rates_and_availability = helper.download_rates_and_availability(
             prop, checkin=checkin, checkout=checkout
         )
@@ -78,6 +82,10 @@ class SyncService:
 
     @classmethod
     def sync_property_detail(cls, prop: Property, helper):
+        if prop.pms_data is None:
+            print(f"No PMS data for property: {prop.name}")
+            return False
+
         property_detail = helper.download_property_details(prop)
         if not property_detail:
             return False
@@ -123,6 +131,10 @@ class SyncService:
 
     @classmethod
     def sync_rooms(cls, prop: Property, helper):
+        if prop.pms_data is None:
+            print(f"No PMS data for property: {prop.name}")
+            return False
+
         rooms_grouped_by_type = helper.download_room_list(prop)
         if not rooms_grouped_by_type:
             return False
@@ -163,6 +175,9 @@ class SyncService:
 
     @classmethod
     def sync_reservations(cls, prop: Property, helper, user=None):
+        if prop.pms_data is None:
+            print(f"No PMS data for property: {prop.name}")
+            return False
         reservations_data = helper.download_reservations(prop)
         if not reservations_data:
             return False
