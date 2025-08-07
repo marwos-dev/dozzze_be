@@ -1,8 +1,23 @@
 import boto3
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+
+from .storage import get_storage
 
 
 def generate_presigned_url(key, expires_in=3600):
+    """Return an accessible URL for a stored file.
+
+    When using the local filesystem storage backend (typically in development)
+    a regular media URL is returned as signed URLs are unnecessary. In other
+    environments the function falls back to generating an AWS S3 presigned URL
+    so that private objects can be retrieved securely.
+    """
+
+    storage = get_storage()
+    if isinstance(storage, FileSystemStorage):
+        return storage.url(key)
+
     s3 = boto3.client(
         "s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,

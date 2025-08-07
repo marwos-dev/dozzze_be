@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from django.contrib.gis.db import models as geomodels
 from django.db import models
-from storages.backends.s3boto3 import S3Boto3Storage
+from utils import get_storage
 
 
 def zone_cover_image_upload_path(instance, filename):
@@ -20,7 +20,7 @@ class Zone(models.Model):
         null=True,
         blank=True,
         verbose_name="Imagen",
-        storage=S3Boto3Storage(),
+        storage=get_storage(),
     )
 
     class Meta:
@@ -43,7 +43,7 @@ class ZoneImage(models.Model):
     image = models.ImageField(
         upload_to=zone_image_upload_path,
         verbose_name="Imagen",
-        storage=S3Boto3Storage(),
+        storage=get_storage(),
     )
     caption = models.CharField(max_length=255, blank=True, verbose_name="Descripción")
 
