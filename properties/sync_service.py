@@ -2,6 +2,8 @@
 import json
 from datetime import datetime
 
+from django.contrib.gis.geos import Point
+
 from reservations.models import Reservation, ReservationRoom
 from utils import extract_pax
 
@@ -126,6 +128,16 @@ class SyncService:
             "pms_property_category", pms_data.pms_property_category
         )
         pms_data.save()
+
+        if (
+            pms_data.pms_property_latitude is not None
+            and pms_data.pms_property_longitude is not None
+        ):
+            prop.location = Point(
+                pms_data.pms_property_longitude,
+                pms_data.pms_property_latitude,
+            )
+            prop.save(update_fields=["location"])
 
         return True
 
