@@ -10,9 +10,10 @@ from pms.models import PMS
 from reservations.models import Reservation
 from zones.models import Zone
 
-from .models import Availability, Property, Room, RoomType, Service
+from .models import Availability, PmsDataProperty, Property, Room, RoomType, Service
 from .schemas import AvailabilityRequest
 from .services import PropertyService
+from .sync_service import SyncService
 
 User = get_user_model()
 
@@ -341,3 +342,31 @@ class AvailabilityServiceTest(TestCase):
         res = PropertyService.get_availability(req)
         key = f"{self.room_type.name}-guests:2"
         self.assertIn("rate_id", res.total_price_per_room_type[key][0])
+
+
+class SyncPropertyDetailTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create(username="owner2", password="pass")
+        self.pms = PMS.objects.create(name="PMS3", pms_key="fnsrooms")
+        self.property = Property.objects.create(
+            owner=self.user,
+            name="SyncProp",
+            description="Desc",
+            address="Addr",
+            location="POINT(0 0)",
+            pms=self.pms,
+        )
+        self.pms_data = PmsDataProperty.objects.create(property=self.property)
+
+    def test_updates_location_from_pms_data(self):
+        class DummyHelper:
+            def download_property_details(self, prop):
+                return {
+                    "pms_property_latitude": 10.0,
+                    "pms_property_longitude": 20.0,
+                }
+
+        SyncService.sync_property_detail(self.property, DummyHelper())
+        self.property.refresh_from_db()
+        self.assertAlmostEqual(self.property.location.y, 10.0)
+        self.assertAlmostEqual(self.property.location.x, 20.0)
