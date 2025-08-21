@@ -18,17 +18,10 @@ from utils import (
 )
 from zones.models import Zone
 
-from .models import (
-    Availability,
-    PmsDataProperty,
-    Property,
-    PropertyImage,
-    RoomType,
-    RoomTypeImage,
-    Service,
-    PropertyService as PropertyServiceModel,
-    RoomService as RoomServiceModel,
-)
+from .models import Availability, PmsDataProperty, Property, PropertyImage
+from .models import PropertyService as PropertyServiceModel
+from .models import RoomService as RoomServiceModel
+from .models import RoomType, RoomTypeImage, Service
 from .schemas import (
     AvailabilityRequest,
     AvailabilityResponse,
@@ -467,24 +460,18 @@ class PropertyService:
             id=room_type_id, property__owner=user
         ).first()
         if not room_type:
-            raise APIError(
-                "Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404
-            )
+            raise APIError("Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
         return list(room_type.services.all())
 
     @staticmethod
-    def add_room_type_service(
-        user, room_type_id: int, data: ServiceIn
-    ) -> Service:
+    def add_room_type_service(user, room_type_id: int, data: ServiceIn) -> Service:
         if not user.is_staff:
             raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
         room_type = RoomType.objects.filter(
             id=room_type_id, property__owner=user
         ).first()
         if not room_type:
-            raise APIError(
-                "Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404
-            )
+            raise APIError("Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
         service, _ = Service.objects.get_or_create(
             code=data.code,
             defaults={
@@ -510,9 +497,7 @@ class PropertyService:
             id=room_type_id, property__owner=user
         ).first()
         if not room_type:
-            raise APIError(
-                "Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404
-            )
+            raise APIError("Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404)
         RoomServiceModel.objects.filter(
             room_type=room_type, service_id=service_id
         ).delete()

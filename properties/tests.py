@@ -9,16 +9,12 @@ from rest_framework_simplejwt.tokens import AccessToken
 from pms.models import PMS
 from reservations.models import Reservation
 from zones.models import Zone
-from .models import (
-    Availability,
-    Property,
-    Room,
-    RoomType,
-    Service,
-    PropertyService as PropertyServiceModel,
-    RoomService as RoomServiceModel,
-)
 
+from .models import Availability, PmsDataProperty, Property
+from .models import PropertyService as PropertyServiceModel
+from .models import Room
+from .models import RoomService as RoomServiceModel
+from .models import RoomType, Service
 from .schemas import AvailabilityRequest
 from .services import PropertyService
 from .sync_service import SyncService
@@ -75,9 +71,7 @@ class PropertyModelTest(TestCase):
                 property=self.property, service=service_data
             ),
         )
-        other_room_type = RoomType.objects.create(
-            property=self.property, name="Suite"
-        )
+        other_room_type = RoomType.objects.create(property=self.property, name="Suite")
         RoomServiceModel.objects.create(
             room_type=other_room_type,
             service=service_data,
