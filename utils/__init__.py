@@ -12,11 +12,13 @@ from .s3_utils import generate_presigned_url
 from .schemas import ErrorSchema, SuccessSchema
 from .SingletonMeta import SingletonMeta
 from .text_utils import extract_pax
+from .storage import get_storage
 
 __all__ = [
     "SingletonMeta",
     "extract_pax",
     "generate_presigned_url",
+    "get_storage",
     "get_ddate_id",
     "get_ddate_text",
     "ErrorSchema",

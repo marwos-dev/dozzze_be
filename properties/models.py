@@ -4,7 +4,7 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from django.contrib.gis.db import models as geomodels
 from django.db import models
-from storages.backends.s3boto3 import S3Boto3Storage
+from utils import get_storage
 
 UserModel = get_user_model()
 
@@ -68,7 +68,7 @@ class Property(models.Model):
         null=True,
         blank=True,
         verbose_name="Imagen",
-        storage=S3Boto3Storage(),
+        storage=get_storage(),
     )
     zone = models.ForeignKey(
         "zones.Zone",
@@ -122,7 +122,7 @@ class PropertyImage(models.Model):
     image = models.ImageField(
         upload_to=property_image_upload_path,
         verbose_name="Imagen",
-        storage=S3Boto3Storage(),
+        storage=get_storage(),
     )
     caption = models.CharField(max_length=255, blank=True, verbose_name="Descripción")
 
@@ -155,7 +155,7 @@ class RoomType(models.Model):
         null=True,
         blank=True,
         verbose_name="Imagen de Portada",
-        storage=S3Boto3Storage(),
+        storage=get_storage(),
     )
     services = models.ManyToManyField(
         "Service",
@@ -191,7 +191,7 @@ class RoomTypeImage(models.Model):
     image = models.ImageField(
         upload_to=property_image_upload_path,
         verbose_name="Imagen",
-        storage=S3Boto3Storage(),
+        storage=get_storage(),
     )
 
     class Meta:
@@ -283,7 +283,7 @@ def room_image_upload_path(instance, filename):
 class RoomImage(models.Model):
     room = models.ForeignKey(Room, related_name="images", on_delete=models.CASCADE)
     image = models.ImageField(
-        upload_to=room_image_upload_path, storage=S3Boto3Storage()
+        upload_to=room_image_upload_path, storage=get_storage()
     )
 
     class Meta:
