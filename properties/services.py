@@ -26,6 +26,8 @@ from .models import (
     RoomType,
     RoomTypeImage,
     Service,
+    PropertyService as PropertyServiceModel,
+    RoomService as RoomServiceModel,
 )
 from .schemas import (
     AvailabilityRequest,
@@ -455,6 +457,65 @@ class PropertyService:
         prop.services.remove(service)
         if not service.properties.exists():
             service.delete()
+        return SuccessSchema(message="Service deleted")
+
+    @staticmethod
+    def list_room_type_services(user, room_type_id: int) -> List[Service]:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        room_type = RoomType.objects.filter(
+            id=room_type_id, property__owner=user
+        ).first()
+        if not room_type:
+            raise APIError(
+                "Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404
+            )
+        return list(room_type.services.all())
+
+    @staticmethod
+    def add_room_type_service(
+        user, room_type_id: int, data: ServiceIn
+    ) -> Service:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        room_type = RoomType.objects.filter(
+            id=room_type_id, property__owner=user
+        ).first()
+        if not room_type:
+            raise APIError(
+                "Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404
+            )
+        service, _ = Service.objects.get_or_create(
+            code=data.code,
+            defaults={
+                "name": data.name,
+                "description": data.description or "",
+            },
+        )
+        property_service, _ = PropertyServiceModel.objects.get_or_create(
+            property=room_type.property, service=service
+        )
+        RoomServiceModel.objects.get_or_create(
+            room_type=room_type, service=service, property_service=property_service
+        )
+        return service
+
+    @staticmethod
+    def delete_room_type_service(
+        user, room_type_id: int, service_id: int
+    ) -> SuccessSchema:
+        if not user.is_staff:
+            raise APIError("Access denied", SecurityErrorCode.ACCESS_DENIED, 403)
+        room_type = RoomType.objects.filter(
+            id=room_type_id, property__owner=user
+        ).first()
+        if not room_type:
+            raise APIError(
+                "Room type not found", PropertyErrorCode.ROOM_NOT_FOUND, 404
+            )
+        RoomServiceModel.objects.filter(
+            room_type=room_type, service_id=service_id
+        ).delete()
         return SuccessSchema(message="Service deleted")
 
     @staticmethod

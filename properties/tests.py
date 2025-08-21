@@ -10,7 +10,15 @@ from pms.models import PMS
 from reservations.models import Reservation
 from zones.models import Zone
 
-from .models import Availability, Property, Room, RoomType, Service
+from .models import (
+    Availability,
+    Property,
+    Room,
+    RoomType,
+    Service,
+    PropertyService as PropertyServiceModel,
+    RoomService as RoomServiceModel,
+)
 from .schemas import AvailabilityRequest
 from .services import PropertyService
 
@@ -52,6 +60,33 @@ class PropertyModelTest(TestCase):
         )
         self.room.reservations.add(Reservation.objects.first())
         self.assertFalse(self.room.is_available(start, end))
+
+    def test_room_type_services_no_duplicate(self):
+        service_data = Service(code="wifi", name="WiFi")
+        service_data.save()
+        PropertyServiceModel.objects.create(
+            property=self.property, service=service_data
+        )
+        RoomServiceModel.objects.create(
+            room_type=self.room_type,
+            service=service_data,
+            property_service=PropertyServiceModel.objects.get(
+                property=self.property, service=service_data
+            ),
+        )
+        other_room_type = RoomType.objects.create(
+            property=self.property, name="Suite"
+        )
+        RoomServiceModel.objects.create(
+            room_type=other_room_type,
+            service=service_data,
+            property_service=PropertyServiceModel.objects.get(
+                property=self.property, service=service_data
+            ),
+        )
+        self.assertEqual(Service.objects.count(), 1)
+        self.assertEqual(PropertyServiceModel.objects.count(), 1)
+        self.assertEqual(RoomServiceModel.objects.count(), 2)
 
 
 class PropertyAPITest(TestCase):

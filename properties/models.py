@@ -157,6 +157,13 @@ class RoomType(models.Model):
         verbose_name="Imagen de Portada",
         storage=S3Boto3Storage(),
     )
+    services = models.ManyToManyField(
+        "Service",
+        through="RoomService",
+        related_name="room_types",
+        verbose_name="Servicios",
+        blank=True,
+    )
 
     class Meta:
         db_table = "room_types"
@@ -195,6 +202,43 @@ class RoomTypeImage(models.Model):
 
     def __str__(self):
         return f"Image of {self.room_type.name}"
+
+
+class RoomService(models.Model):
+    room_type = models.ForeignKey(
+        "RoomType",
+        related_name="room_services",
+        on_delete=models.CASCADE,
+        verbose_name="Tipo de Habitación",
+    )
+    service = models.ForeignKey(
+        Service,
+        related_name="room_services",
+        on_delete=models.CASCADE,
+        verbose_name="Servicio",
+    )
+    property_service = models.ForeignKey(
+        PropertyService,
+        related_name="room_services",
+        on_delete=models.CASCADE,
+        verbose_name="Servicio de Propiedad",
+    )
+
+    class Meta:
+        db_table = "room_services"
+        verbose_name = "Servicio de Habitación"
+        verbose_name_plural = "Servicios de Habitaciones"
+        unique_together = ("room_type", "service")
+
+    def __str__(self):
+        return f"{self.service.name} - {self.room_type.name}"
+
+    def save(self, *args, **kwargs):
+        if not self.property_service_id:
+            self.property_service, _ = PropertyService.objects.get_or_create(
+                property=self.room_type.property, service=self.service
+            )
+        super().save(*args, **kwargs)
 
 
 class Room(models.Model):
