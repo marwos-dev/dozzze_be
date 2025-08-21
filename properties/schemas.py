@@ -68,7 +68,7 @@ class RoomTypeOut(Schema):
 
     @staticmethod
     def resolve_services(obj):
-        if obj.property and obj.property.services.exists():
+        if obj.services.exists():
             return [
                 ServiceOut(
                     id=service.id,
@@ -76,7 +76,7 @@ class RoomTypeOut(Schema):
                     name=service.name,
                     description=service.description,
                 )
-                for service in obj.property.services.all()
+                for service in obj.services.all()
             ]
         return []
 

@@ -230,6 +230,35 @@ def delete_property_service(request, property_id: int, service_id: int):
 
 
 @router.get(
+    "/my/room-types/{room_type_id}/services",
+    response=List[ServiceOut],
+    auth=AuthBearer(),
+)
+def list_room_type_services(request, room_type_id: int):
+    return PropertyService.list_room_type_services(request.user, room_type_id)
+
+
+@router.post(
+    "/my/room-types/{room_type_id}/services",
+    response=ServiceOut,
+    auth=AuthBearer(),
+)
+def add_room_type_service(request, room_type_id: int, data: ServiceIn):
+    return PropertyService.add_room_type_service(request.user, room_type_id, data)
+
+
+@router.delete(
+    "/my/room-types/{room_type_id}/services/{service_id}",
+    response={200: SuccessSchema, 404: ErrorSchema},
+    auth=AuthBearer(),
+)
+def delete_room_type_service(request, room_type_id: int, service_id: int):
+    return PropertyService.delete_room_type_service(
+        request.user, room_type_id, service_id
+    )
+
+
+@router.get(
     "/my/room-types/{room_type_id}/images",
     response=List[RoomTypeImageOut],
     auth=AuthBearer(),
